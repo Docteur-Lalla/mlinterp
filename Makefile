@@ -2,6 +2,8 @@ EXEC=mlinterp
 
 CMOFILES= \
 	Value.cmo \
+	Context.cmo \
+	State.cmo \
 	Interpreter.cmo \
 	Main.cmo
 
