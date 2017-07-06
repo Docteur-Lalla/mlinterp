@@ -52,7 +52,8 @@ let rec repl () =
     | Parsetree.Ptop_dir ("quit", _) -> ()
     | Parsetree.Ptop_dir (s, _) -> print_endline s ; repl ()
     | Parsetree.Ptop_def strct ->
-      Interpreter.run_structure strct
+      Interpreter.run_structure () () strct
+      |> snd
       |> Value.print_value
       |> repl
   with
@@ -66,7 +67,8 @@ let () =
       get_contents filename
       |> Lexing.from_string
       |> Parse.implementation
-      |> Interpreter.run_structure
+      |> Interpreter.run_structure () ()
+      |> snd
       |> Value.print_value
     with
     | NoFilenameException -> repl ()
