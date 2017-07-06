@@ -6,10 +6,13 @@ exception NoFilenameException
 
 let optparser = OptParser.make
   ~prog: "mlinterp"
-  ~usage: "%prog - Interpret OCaml code"
+  ~usage: "%prog - Interpreter of OCaml code"
   ~version: "0.1"
   ()
 
+(* This function parses the program's arguments and get the filename if any.
+ * If no filename has been sent has argument, a NoFilenameException is raised.
+ * If several filenames have been sent, a BadNumberOfFilesException is raised. *)
 let get_filename () =
   let files = OptParser.parse_argv optparser in
   match files with
@@ -25,6 +28,7 @@ let get_contents filename =
     file_in_channel in
   BatIO.read_all file_input
 
+(** This function reads lines until ";;" appears in the command typed. *)
 let read_toplevel_phrase () =
   let cmd = ref "" in
   let contains_end str =
@@ -36,6 +40,9 @@ let read_toplevel_phrase () =
   done ;
   !cmd
 
+(** Read-Eval-Print Loop.
+ * It reads a toplevel phrase, evaluates it and prints the result.
+ * This function loops until the input is "#quit ;;". *)
 let rec repl () =
   try
     let cmd = read_toplevel_phrase () in
@@ -51,6 +58,7 @@ let rec repl () =
   with
   | e -> raise e
 
+(** Entry-point of the interpreter. *)
 let () =
   try
     try
