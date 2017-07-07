@@ -44,6 +44,9 @@ and run_expression state ctx exp =
     let ctx' = BatList.fold_left prealloc ctx bindings in
     run_expression state ctx' expr
   | Pexp_tuple (exprs) -> Value.Tuple (BatList.map (run_expression state ctx) exprs)
+  | Pexp_array (exprs) ->
+    let lst = BatList.map (run_expression state ctx) exprs in
+    Value.Array (BatArray.of_list lst)
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with

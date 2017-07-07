@@ -23,7 +23,7 @@ let rec string_of_value = function
   let contents = BatArray.to_list ary
     |> BatList.map string_of_value
     |> BatString.concat " ; " in
-  "[| " ^ contents ^ "|]"
+  "[| " ^ contents ^ " |]"
 | Tuple t ->
   let contents = BatList.map string_of_value t
     |> BatString.concat ", " in
