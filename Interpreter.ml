@@ -43,6 +43,7 @@ and run_expression state ctx exp =
         match_pattern state ctx value binding.pvb_pat in
     let ctx' = BatList.fold_left prealloc ctx bindings in
     run_expression state ctx' expr
+  | Pexp_tuple (exprs) -> Value.Tuple (BatList.map (run_expression state ctx) exprs)
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
@@ -53,6 +54,7 @@ and match_pattern state ctx value patt =
     let id = l.txt in
     let idx = State.add state (State.Normal value) in
     Context.add id idx ctx
+  | Ppat_constant c when Value.value_eq (run_constant c) value -> ctx
   | _ -> raise NotImplemented
 
 (** This function executes a toplevel phrase. *)

@@ -45,6 +45,7 @@ let read_toplevel_phrase () =
  * This function loops until the input is "#quit ;;". *)
 let rec repl state ctx =
   try
+    print_string "# " ;
     let cmd = read_toplevel_phrase () in
     let lexbuf = Lexing.from_string cmd in
     let toplevel_phrase = Parse.toplevel_phrase lexbuf in
@@ -58,7 +59,8 @@ let rec repl state ctx =
         ctx'
       with
       | Interpreter.NotImplemented -> print_endline "Feature not implemented yet." ; ctx
-      | Interpreter.NotSupportedException s -> print_endline @@ "Feature \"" ^ s ^ "\" is not supported." ; ctx in
+      | Interpreter.NotSupportedException s -> print_endline @@ "Feature \"" ^ s ^ "\" is not supported." ; ctx
+      | Value.TypeError -> print_endline "Type error." ; ctx in
       repl state ctx''
   with
   | e -> raise e
