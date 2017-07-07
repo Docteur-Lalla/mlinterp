@@ -13,6 +13,7 @@ let run_constant = function
 | Pconst_char c -> Value.Char c
 | Pconst_string (s, _) -> Value.String s
 
+(** This function retrieves the value behind the given identifier. *)
 let rec run_identifier state ctx = function
 | Lident id -> Context.find id ctx
   |> State.get state
@@ -44,6 +45,8 @@ and run_expression state ctx exp =
     run_expression state ctx' expr
   | _ -> raise NotImplemented
 
+(** This function matches the given value with the pattern and returns a context with
+ * the variables defined with the pattern. *)
 and match_pattern state ctx value patt =
   match patt.ppat_desc with
   | Ppat_var l ->
@@ -52,15 +55,18 @@ and match_pattern state ctx value patt =
     Context.add id idx ctx
   | _ -> raise NotImplemented
 
+(** This function executes a toplevel phrase. *)
 and run_structure_item state ctx item =
   match item.pstr_desc with
   | Pstr_eval (exp, _) -> (ctx, run_expression state ctx exp)
   | _ -> raise NotImplemented
 
+(** This function evaluates a module structure. *)
 and run_structure state ctx =
   let run_item (ctx, _) = run_structure_item state ctx in
   BatList.fold_left run_item (ctx, Value.Int 0)
 
+(** This function computes a value from its allocation in the state. *)
 and value_of_alloc state = function
 | State.Normal v -> v
 | State.Prealloc (exp, ctx) -> run_expression state ctx exp

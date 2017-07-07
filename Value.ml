@@ -1,5 +1,6 @@
 open Batteries
 
+(** Internal representation of OCaml values in this interpreter. *)
 type t =
 | Int of int
 | Float of float
@@ -9,6 +10,7 @@ type t =
 | Tuple of t list
 | Function of (t -> t)
 
+(** Convert a value to its textual representation. *)
 let rec string_of_value = function
 | Int i -> string_of_int i
 | Float f -> string_of_float f
