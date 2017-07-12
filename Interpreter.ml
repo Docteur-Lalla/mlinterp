@@ -4,6 +4,7 @@ open Longident
 open Asttypes
 
 exception NotSupportedException of string
+exception MatchFailureException
 exception NotImplemented
 
 (** This function interprets a constant literal and returns the corresponding value. *)
@@ -43,10 +44,13 @@ and run_expression state ctx exp =
         match_pattern state ctx value binding.pvb_pat in
     let ctx' = BatList.fold_left prealloc ctx bindings in
     run_expression state ctx' expr
-  | Pexp_tuple (exprs) -> Value.Tuple (BatList.map (run_expression state ctx) exprs)
-  | Pexp_array (exprs) ->
+  | Pexp_tuple exprs -> Value.Tuple (BatList.map (run_expression state ctx) exprs)
+  | Pexp_array exprs ->
     let lst = BatList.map (run_expression state ctx) exprs in
     Value.Array (BatArray.of_list lst)
+  | Pexp_function cases ->
+    let func value = match_many_pattern state ctx value cases in
+    Value.Function func
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
@@ -58,7 +62,24 @@ and match_pattern state ctx value patt =
     let idx = State.add state (State.Normal value) in
     Context.add id idx ctx
   | Ppat_constant c when Value.value_eq (run_constant c) value -> ctx
+  | Ppat_alias (p, l) ->
+    let ctx' = match_pattern state ctx value p in
+    match_pattern state ctx' value { patt with ppat_desc = Ppat_var l }
+  | Ppat_or (p1, p2) ->
+    begin
+      try match_pattern state ctx value p1
+      with _ -> match_pattern state ctx value p2
+    end
   | _ -> raise NotImplemented
+
+and match_many_pattern state ctx value = function
+| [] -> raise MatchFailureException
+| case :: rest ->
+  try
+    let ctx' = match_pattern state ctx value case.pc_lhs in
+    run_expression state ctx' case.pc_rhs
+  with
+  | MatchFailureException -> match_many_pattern state ctx value rest
 
 (** This function executes a toplevel phrase. *)
 and run_structure_item state ctx item =
