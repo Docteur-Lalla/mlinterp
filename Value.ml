@@ -2,15 +2,20 @@ open Batteries
 
 exception TypeError ;;
 
+type argument =
+| Labelled of string
+| Optional of string * t option
+| Simple
+
 (** Internal representation of OCaml values in this interpreter. *)
-type t =
+and t =
 | Int of int
 | Float of float
 | Char of char
 | String of string
 | Array of t array
 | Tuple of t list
-| Function of (t -> t)
+| Function of argument * (t -> t)
 
 (** Convert a value to its textual representation. *)
 let rec string_of_value = function
