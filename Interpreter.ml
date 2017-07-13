@@ -73,6 +73,10 @@ and run_expression state ctx exp =
         | _ -> raise @@ NotFunctionException fval
       end in
     apply_func fval args
+  | Pexp_match (expr, cases) ->
+    let func = { exp with pexp_desc = Pexp_function cases } in
+    let app = { exp with pexp_desc = Pexp_apply (func, [(Nolabel, expr)]) } in
+    run_expression state ctx app
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
