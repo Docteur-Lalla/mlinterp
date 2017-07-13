@@ -5,6 +5,7 @@ open Asttypes
 
 exception NotSupportedException of string
 exception MatchFailureException
+exception NotFunctionException of Value.t
 exception NotImplemented
 
 (** This function interprets a constant literal and returns the corresponding value. *)
@@ -38,7 +39,9 @@ and run_expression state ctx exp =
         | Ppat_var l -> l.txt
         | _ -> raise @@ NotSupportedException "Non-variable pattern in recursive let-binding" in
         let idx = State.add state alloc in
-        Context.add id idx ctx
+        let ctx' = Context.add id idx ctx in
+        State.set state idx @@ State.Prealloc (binding.pvb_expr, ctx') ;
+        ctx'
       else
         let value = run_expression state ctx binding.pvb_expr in
         match_pattern state ctx value binding.pvb_pat in
@@ -57,6 +60,19 @@ and run_expression state ctx exp =
     Value.Function func
   | Pexp_fun (Labelled _, _, _, _)
   | Pexp_fun (Optional _, _, _, _) -> raise @@ NotSupportedException "Labelled and optional argument"
+  | Pexp_apply (fexp, arg_exps) ->
+    let fval = run_expression state ctx fexp in
+    let args = BatList.map snd arg_exps
+      |> BatList.map (run_expression state ctx) in
+    let rec apply_func fval = function
+    | [] -> fval
+    | arg :: rest ->
+      begin
+        match fval with
+        | Value.Function func -> apply_func (func arg) rest
+        | _ -> raise @@ NotFunctionException fval
+      end in
+    apply_func fval args
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with

@@ -59,7 +59,10 @@ let rec repl state ctx =
         ctx'
       with
       | Interpreter.NotImplemented -> print_endline "Feature not implemented yet." ; ctx
+      | Interpreter.MatchFailureException -> print_endline "Matching failure" ; ctx
       | Interpreter.NotSupportedException s -> print_endline @@ "Feature \"" ^ s ^ "\" is not supported." ; ctx
+      | Interpreter.NotFunctionException v ->
+        print_endline @@ "Value " ^ Value.string_of_value v ^ " is not a function." ; ctx
       | Value.TypeError -> print_endline "Type error." ; ctx in
       repl state ctx''
   with
