@@ -50,18 +50,13 @@ and run_expression state ctx exp =
     Value.Array (BatArray.of_list lst)
   | Pexp_function cases ->
     let func value = match_many_pattern state ctx value cases in
-    Value.Function (Value.Simple, func)
-  | Pexp_fun (lbl, opt, patt, expr) ->
-    let opt_value = match opt with
-    | None -> None
-    | Some e -> Some (run_expression state ctx e) in
+    Value.Function func
+  | Pexp_fun (Nolabel, _, patt, expr) ->
     let func value = match_pattern state ctx value patt
       |> flip (run_expression state) expr in
-    let arg = match lbl with
-    | Nolabel -> Value.Simple
-    | Labelled s -> Value.Labelled s
-    | Optional s -> Value.Optional (s, opt_value) in
-    Value.Function (arg, func)
+    Value.Function func
+  | Pexp_fun (Labelled _, _, _, _)
+  | Pexp_fun (Optional _, _, _, _) -> raise @@ NotSupportedException "Labelled and optional argument"
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
