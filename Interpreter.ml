@@ -79,11 +79,13 @@ and run_expression state ctx exp =
  * the variables defined with the pattern. *)
 and match_pattern state ctx value patt =
   match patt.ppat_desc with
+  | Ppat_any -> ctx
   | Ppat_var l ->
     let id = l.txt in
     let idx = State.add state (State.Normal value) in
     Context.add id idx ctx
   | Ppat_constant c when Value.value_eq (run_constant c) value -> ctx
+  | Ppat_constant _ -> raise MatchFailureException
   | Ppat_alias (p, l) ->
     let ctx' = match_pattern state ctx value p in
     match_pattern state ctx' value { patt with ppat_desc = Ppat_var l }

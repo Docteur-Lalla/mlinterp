@@ -36,7 +36,9 @@ let read_toplevel_phrase () =
     with _ -> false in
   while not (contains_end !cmd) do
     let line = read_line () in
-    cmd := !cmd ^ "\n" ^ line
+    cmd := !cmd ^ "\n" ^ line ;
+    if not (contains_end !cmd) then
+      print_string "> "
   done ;
   !cmd
 
