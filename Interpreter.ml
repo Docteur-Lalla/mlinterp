@@ -108,6 +108,17 @@ and match_pattern state ctx value patt =
           BatList.fold_left2 (match_pattern state) ctx vals patts
       | _ -> raise Value.TypeError
     end
+  | Ppat_array patts ->
+    begin
+      match value with
+      | Value.Array vals ->
+        let val_list = BatArray.to_list vals in
+        if BatList.length patts <> BatList.length val_list then
+          raise MatchFailureException
+        else
+          BatList.fold_left2 (match_pattern state) ctx val_list patts
+      | _ -> raise Value.TypeError
+    end
   | _ -> raise NotImplemented
 
 and match_many_pattern state ctx value = function
