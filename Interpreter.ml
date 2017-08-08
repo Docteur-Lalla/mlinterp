@@ -98,6 +98,16 @@ and match_pattern state ctx value patt =
       try match_pattern state ctx value p1
       with _ -> match_pattern state ctx value p2
     end
+  | Ppat_tuple patts ->
+    begin
+      match value with
+      | Value.Tuple vals ->
+        if BatList.length patts <> BatList.length vals then
+          raise MatchFailureException
+        else
+          BatList.fold_left2 (match_pattern state) ctx vals patts
+      | _ -> raise Value.TypeError
+    end
   | _ -> raise NotImplemented
 
 and match_many_pattern state ctx value = function
