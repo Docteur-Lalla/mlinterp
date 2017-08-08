@@ -118,9 +118,28 @@ and run_expression state ctx exp =
         Value.Sumtype ("()", None)
       | _ -> raise Value.TypeError
     end
+  | Pexp_sequence (exp1, exp2) ->
+    ignore @@ run_expression state ctx exp1 ;
+    run_expression state ctx exp2
   | Pexp_while (cond, expr) ->
     while run_expression state ctx cond = Value.Sumtype ("true", None) do
       ignore @@ run_expression state ctx expr
+    done ;
+    Value.Sumtype ("()", None)
+  | Pexp_for (patt, start, stop, dir, body) ->
+    let value = ref (run_expression state ctx start) in
+    let for_iter ctx value patt =
+      let ctx' = match_pattern state ctx value patt in
+      run_expression state ctx' body in
+    let iter value = match dir with
+    | Upto -> begin match value with Value.Int i -> Value.Int (i + 1) end
+    | Downto -> begin match value with Value.Int i -> Value.Int (i - 1) end in
+    let stop_value = match run_expression state ctx stop with
+      Value.Int i -> Value.Int (i + 1) in
+
+    while ValueUtils.value_eq !value stop_value = false do
+      for_iter ctx !value patt ;
+      value := iter !value
     done ;
     Value.Sumtype ("()", None)
   | _ -> raise NotImplemented
