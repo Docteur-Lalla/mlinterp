@@ -88,6 +88,18 @@ and run_expression state ctx exp =
     | Some v -> Some (run_expression state ctx v) in
     let name = BatString.join "." (Longident.flatten ident.txt) in
     Value.Sumtype (name, val_opt)
+  | Pexp_record (fields, with_clause) ->
+    let base = match with_clause with
+    | None -> BatMap.empty
+    | Some exp ->
+      match run_expression state ctx exp with
+      | Value.Record r -> r in
+    let add_to_record r (ident, exp) =
+      let name = BatString.join "." (Longident.flatten ident.txt) in
+      let value = run_expression state ctx exp in
+      let idx = State.add state (State.Normal value) in
+      BatMap.add name idx r in
+    Value.Record (BatList.fold_left add_to_record base fields)
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
@@ -99,7 +111,7 @@ and match_pattern state ctx value patt =
     let id = l.txt in
     let idx = State.add state (State.Normal value) in
     Context.add id idx ctx
-  | Ppat_constant c when Value.value_eq (run_constant c) value -> ctx
+  | Ppat_constant c when ValueUtils.value_eq (run_constant c) value -> ctx
   | Ppat_constant _ -> raise MatchFailureException
   | Ppat_alias (p, l) ->
     let ctx' = match_pattern state ctx value p in

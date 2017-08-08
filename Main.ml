@@ -57,14 +57,14 @@ let rec repl state ctx =
     | Parsetree.Ptop_def strct ->
       let ctx'' = try
         let (ctx', value) = Interpreter.run_structure state ctx strct in
-        Value.print_value value ;
+        ValueUtils.print_value state value ;
         ctx'
       with
       | Interpreter.NotImplemented -> print_endline "Feature not implemented yet." ; ctx
       | Interpreter.MatchFailureException -> print_endline "Matching failure" ; ctx
       | Interpreter.NotSupportedException s -> print_endline @@ "Feature \"" ^ s ^ "\" is not supported." ; ctx
       | Interpreter.NotFunctionException v ->
-        print_endline @@ "Value " ^ Value.string_of_value v ^ " is not a function." ; ctx
+        print_endline @@ "Value " ^ ValueUtils.string_of_value state v ^ " is not a function." ; ctx
       | Value.TypeError -> print_endline "Type error." ; ctx in
       repl state ctx''
   with
@@ -75,12 +75,13 @@ let () =
   try
     try
       let filename = get_filename () in
+      let state = State.empty () in
       get_contents filename
       |> Lexing.from_string
       |> Parse.implementation
-      |> Interpreter.run_structure (State.empty ()) Context.empty
+      |> Interpreter.run_structure state Context.empty
       |> snd
-      |> Value.print_value
+      |> ValueUtils.print_value state
     with
     | NoFilenameException -> repl (State.empty ()) Context.empty
   with

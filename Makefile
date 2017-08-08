@@ -4,6 +4,7 @@ CMOFILES= \
 	Value.cmo \
 	Context.cmo \
 	State.cmo \
+	ValueUtils.cmo \
 	Interpreter.cmo \
 	Main.cmo
 
