@@ -118,6 +118,11 @@ and run_expression state ctx exp =
         Value.Sumtype ("()", None)
       | _ -> raise Value.TypeError
     end
+  | Pexp_while (cond, expr) ->
+    while run_expression state ctx cond = Value.Sumtype ("true", None) do
+      ignore @@ run_expression state ctx expr
+    done ;
+    Value.Sumtype ("()", None)
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
