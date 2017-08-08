@@ -77,6 +77,11 @@ and run_expression state ctx exp =
     let func = { exp with pexp_desc = Pexp_function cases } in
     let app = { exp with pexp_desc = Pexp_apply (func, [(Nolabel, expr)]) } in
     run_expression state ctx app
+  | Pexp_variant (name, exp_opt) ->
+    let val_opt = match exp_opt with
+      | None -> None
+      | Some v -> Some (run_expression state ctx v) in
+    Value.Variant (name, val_opt)
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
@@ -117,6 +122,19 @@ and match_pattern state ctx value patt =
           raise MatchFailureException
         else
           BatList.fold_left2 (match_pattern state) ctx val_list patts
+      | _ -> raise Value.TypeError
+    end
+  | Ppat_variant (name, param) ->
+    begin
+      match value with
+      | Value.Variant (vname, vval) ->
+        if name = vname then
+          match (param, vval) with
+          | None, None -> ctx
+          | Some v, Some p -> match_pattern state ctx p v
+          | _ -> raise Value.TypeError
+        else
+          raise MatchFailureException
       | _ -> raise Value.TypeError
     end
   | _ -> raise NotImplemented

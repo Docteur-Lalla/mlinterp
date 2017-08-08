@@ -11,6 +11,7 @@ type t =
 | Array of t array
 | Tuple of t list
 | Function of (t -> t)
+| Variant of string * t option
 
 (** Convert a value to its textual representation. *)
 let rec string_of_value = function
@@ -29,8 +30,10 @@ let rec string_of_value = function
     |> BatString.concat ", " in
   "(" ^ contents ^ ")"
 | Function _ -> "<function>"
+| Variant (name, None) -> "`" ^ name
+| Variant (name, Some v) -> "`" ^ name ^ " " ^ string_of_value v
 
-let type_of_value = function
+let rec type_of_value = function
 | Int _ -> "int"
 | Float _ -> "float"
 | Char _ -> "char"
@@ -38,6 +41,8 @@ let type_of_value = function
 | Array _ -> "array"
 | Tuple _ -> "tuple"
 | Function _ -> "function"
+| Variant (name, None) -> "[> `" ^ name ^ "]"
+| Variant (name, Some v) -> "[> `" ^ name ^ " of " ^ type_of_value v ^ " ]"
 
 let print_value v =
   let ty = type_of_value v in
@@ -51,4 +56,7 @@ let rec value_eq a b = match (a, b) with
 | (Array a1, Array a2) -> BatArray.for_all2 value_eq a1 a2
 | (Tuple t1, Tuple t2) -> BatList.for_all2 value_eq t1 t2
 | (Function _, Function _) -> false
+| (Variant (n1, None), Variant (n2, None)) -> n1 = n2
+| (Variant (n1, Some v1), Variant (n2, Some v2)) -> n1 = n2 && value_eq v1 v2
+| (Variant _, Variant _) -> false
 | _ -> raise TypeError
