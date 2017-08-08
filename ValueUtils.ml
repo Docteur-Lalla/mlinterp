@@ -1,6 +1,8 @@
 open Batteries
 open Value
 
+exception RuntimeException
+
 (** Convert a value to its textual representation. *)
 let rec string_of_value state = function
 | Int i -> string_of_int i
@@ -24,7 +26,9 @@ let rec string_of_value state = function
 | Sumtype (name, Some v) -> name ^ " " ^ string_of_value state v
 | Record r ->
   let string_of_field (name, idx) =
-    let (State.Normal value) = State.get state idx in
+    let value = match State.get state idx with
+    | State.Normal value -> value
+    | State.Prealloc _ -> raise RuntimeException in
     name ^ " = " ^ string_of_value state value in
   let fields_s = BatList.of_enum @@ BatEnum.map string_of_field (BatMap.enum r) in
   "{" ^ BatString.join " ; " fields_s ^ "}"

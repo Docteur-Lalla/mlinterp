@@ -93,7 +93,8 @@ and run_expression state ctx exp =
     | None -> BatMap.empty
     | Some exp ->
       match run_expression state ctx exp with
-      | Value.Record r -> r in
+      | Value.Record r -> r
+      | _ -> raise Value.TypeError in
     let add_to_record r (ident, exp) =
       let name = Longident.last ident.txt in
       let value = run_expression state ctx exp in
@@ -104,17 +105,17 @@ and run_expression state ctx exp =
     let field = Longident.last fieldname.txt in
     begin
       match run_expression state ctx exp with
-      | Record r -> value_of_alloc state @@ State.get state (BatMap.find field r)
+      | Value.Record r -> value_of_alloc state @@ State.get state (BatMap.find field r)
       | _ -> raise Value.TypeError
     end
   | Pexp_setfield (r_exp, fieldname, exp) ->
     let field = Longident.last fieldname.txt in
     begin
       match run_expression state ctx r_exp with
-      | Record r ->
+      | Value.Record r ->
         let value = run_expression state ctx exp in
         let idx = BatMap.find field r in
-        State.set state idx (Normal value) ;
+        State.set state idx (State.Normal value) ;
         Value.Sumtype ("()", None)
       | _ -> raise Value.TypeError
     end
@@ -130,12 +131,13 @@ and run_expression state ctx exp =
     let value = ref (run_expression state ctx start) in
     let for_iter ctx value patt =
       let ctx' = match_pattern state ctx value patt in
-      run_expression state ctx' body in
+      ignore @@ run_expression state ctx' body in
     let iter value = match dir with
-    | Upto -> begin match value with Value.Int i -> Value.Int (i + 1) end
-    | Downto -> begin match value with Value.Int i -> Value.Int (i - 1) end in
+    | Upto -> begin match value with Value.Int i -> Value.Int (i + 1) | _ -> raise Value.TypeError end
+    | Downto -> begin match value with Value.Int i -> Value.Int (i - 1) | _ -> raise Value.TypeError end in
     let stop_value = match run_expression state ctx stop with
-      Value.Int i -> Value.Int (i + 1) in
+    | Value.Int i -> Value.Int (i + 1)
+    | _ -> raise Value.TypeError in
 
     while ValueUtils.value_eq !value stop_value = false do
       for_iter ctx !value patt ;
