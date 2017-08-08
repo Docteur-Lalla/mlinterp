@@ -12,6 +12,7 @@ type t =
 | Tuple of t list
 | Function of (t -> t)
 | Variant of string * t option
+| Sumtype of string * t option
 
 (** Convert a value to its textual representation. *)
 let rec string_of_value = function
@@ -32,6 +33,8 @@ let rec string_of_value = function
 | Function _ -> "<function>"
 | Variant (name, None) -> "`" ^ name
 | Variant (name, Some v) -> "`" ^ name ^ " " ^ string_of_value v
+| Sumtype (name, None) -> name
+| Sumtype (name, Some v) -> name ^ " " ^ string_of_value v
 
 let rec type_of_value = function
 | Int _ -> "int"
@@ -43,6 +46,7 @@ let rec type_of_value = function
 | Function _ -> "function"
 | Variant (name, None) -> "[> `" ^ name ^ "]"
 | Variant (name, Some v) -> "[> `" ^ name ^ " of " ^ type_of_value v ^ " ]"
+| Sumtype _ -> "sumtype"
 
 let print_value v =
   let ty = type_of_value v in
@@ -59,4 +63,7 @@ let rec value_eq a b = match (a, b) with
 | (Variant (n1, None), Variant (n2, None)) -> n1 = n2
 | (Variant (n1, Some v1), Variant (n2, Some v2)) -> n1 = n2 && value_eq v1 v2
 | (Variant _, Variant _) -> false
+| (Sumtype (n1, None), Sumtype (n2, None)) -> n1 = n2
+| (Sumtype (n1, Some v1), Sumtype (n2, Some v2)) -> n1 = n2 && value_eq v1 v2
+| (Sumtype _, Sumtype _) -> false
 | _ -> raise TypeError

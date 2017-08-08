@@ -82,6 +82,12 @@ and run_expression state ctx exp =
       | None -> None
       | Some v -> Some (run_expression state ctx v) in
     Value.Variant (name, val_opt)
+  | Pexp_construct (ident, exp_opt) ->
+    let val_opt = match exp_opt with
+    | None -> None
+    | Some v -> Some (run_expression state ctx v) in
+    let name = BatString.join "." (Longident.flatten ident.txt) in
+    Value.Sumtype (name, val_opt)
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
@@ -128,6 +134,20 @@ and match_pattern state ctx value patt =
     begin
       match value with
       | Value.Variant (vname, vval) ->
+        if name = vname then
+          match (param, vval) with
+          | None, None -> ctx
+          | Some v, Some p -> match_pattern state ctx p v
+          | _ -> raise Value.TypeError
+        else
+          raise MatchFailureException
+      | _ -> raise Value.TypeError
+    end
+  | Ppat_construct (ident, param) ->
+    begin
+      match value with
+      | Value.Sumtype (vname, vval) ->
+        let name = BatString.join "." (Longident.flatten ident.txt) in
         if name = vname then
           match (param, vval) with
           | None, None -> ctx
