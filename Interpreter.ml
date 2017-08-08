@@ -86,7 +86,7 @@ and run_expression state ctx exp =
     let val_opt = match exp_opt with
     | None -> None
     | Some v -> Some (run_expression state ctx v) in
-    let name = BatString.join "." (Longident.flatten ident.txt) in
+    let name = Longident.last ident.txt in
     Value.Sumtype (name, val_opt)
   | Pexp_record (fields, with_clause) ->
     let base = match with_clause with
@@ -95,11 +95,29 @@ and run_expression state ctx exp =
       match run_expression state ctx exp with
       | Value.Record r -> r in
     let add_to_record r (ident, exp) =
-      let name = BatString.join "." (Longident.flatten ident.txt) in
+      let name = Longident.last ident.txt in
       let value = run_expression state ctx exp in
       let idx = State.add state (State.Normal value) in
       BatMap.add name idx r in
     Value.Record (BatList.fold_left add_to_record base fields)
+  | Pexp_field (exp, fieldname) ->
+    let field = Longident.last fieldname.txt in
+    begin
+      match run_expression state ctx exp with
+      | Record r -> value_of_alloc state @@ State.get state (BatMap.find field r)
+      | _ -> raise Value.TypeError
+    end
+  | Pexp_setfield (r_exp, fieldname, exp) ->
+    let field = Longident.last fieldname.txt in
+    begin
+      match run_expression state ctx r_exp with
+      | Record r ->
+        let value = run_expression state ctx exp in
+        let idx = BatMap.find field r in
+        State.set state idx (Normal value) ;
+        Value.Sumtype ("()", None)
+      | _ -> raise Value.TypeError
+    end
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
