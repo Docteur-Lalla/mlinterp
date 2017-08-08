@@ -7,6 +7,7 @@ exception NotSupportedException of string
 exception MatchFailureException
 exception NotFunctionException of Value.t
 exception NotImplemented
+exception AssertFalseException
 
 (** This function interprets a constant literal and returns the corresponding value. *)
 let run_constant = function
@@ -149,6 +150,22 @@ and run_expression state ctx exp =
       value := iter !value
     done ;
     Value.Sumtype ("()", None)
+  | Pexp_ifthenelse (cond, exp1, exp2_opt) ->
+    let cond_value = run_expression state ctx cond in
+    if cond_value = Value.Sumtype ("true", None) then
+      run_expression state ctx exp1
+    else
+      begin
+        match exp2_opt with
+        | Some exp2 -> run_expression state ctx exp2
+        | None -> Value.Sumtype ("()", None)
+      end
+  | Pexp_assert exp ->
+    let value = run_expression state ctx exp in
+    if value = Value.Sumtype ("false", None) then
+      raise AssertFalseException
+    else
+      Value.Sumtype ("()", None)
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
@@ -233,6 +250,22 @@ and match_many_pattern state ctx value = function
 and run_structure_item state ctx item =
   match item.pstr_desc with
   | Pstr_eval (exp, _) -> (ctx, run_expression state ctx exp)
+  | Pstr_value (rec_flag, bindings) ->
+    let prealloc ctx binding =
+      if rec_flag = Recursive then
+        let alloc = State.Prealloc (binding.pvb_expr, ctx) in
+        let id = match binding.pvb_pat.ppat_desc with
+        | Ppat_var l -> l.txt
+        | _ -> raise @@ NotSupportedException "Non-variable pattern in recursive let-binding" in
+        let idx = State.add state alloc in
+        let ctx' = Context.add id idx ctx in
+        State.set state idx @@ State.Prealloc (binding.pvb_expr, ctx') ;
+        ctx'
+      else
+        let value = run_expression state ctx binding.pvb_expr in
+        match_pattern state ctx value binding.pvb_pat in
+    let ctx' = BatList.fold_left prealloc ctx bindings in
+    (ctx', Value.Sumtype ("()", None))
   | _ -> raise NotImplemented
 
 (** This function evaluates a module structure. *)

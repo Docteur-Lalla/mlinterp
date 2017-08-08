@@ -65,7 +65,8 @@ let rec repl state ctx =
       | Interpreter.NotSupportedException s -> print_endline @@ "Feature \"" ^ s ^ "\" is not supported." ; ctx
       | Interpreter.NotFunctionException v ->
         print_endline @@ "Value " ^ ValueUtils.string_of_value state v ^ " is not a function." ; ctx
-      | Value.TypeError -> print_endline "Type error." ; ctx in
+      | Value.TypeError -> print_endline "Type error." ; ctx
+      | Interpreter.AssertFalseException -> print_endline "Assertion evaluated to false." ; ctx in
       repl state ctx''
   with
   | e -> raise e
