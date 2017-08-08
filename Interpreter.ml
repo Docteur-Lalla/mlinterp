@@ -132,9 +132,14 @@ and run_expression state ctx exp =
     let for_iter ctx value patt =
       let ctx' = match_pattern state ctx value patt in
       ignore @@ run_expression state ctx' body in
-    let iter value = match dir with
-    | Upto -> begin match value with Value.Int i -> Value.Int (i + 1) | _ -> raise Value.TypeError end
-    | Downto -> begin match value with Value.Int i -> Value.Int (i - 1) | _ -> raise Value.TypeError end in
+    let iter = function
+    | Value.Int i ->
+      begin
+        match dir with
+        | Upto -> Value.Int (i + 1)
+        | Downto -> Value.Int (i - 1)
+      end
+    | _ -> raise Value.TypeError in
     let stop_value = match run_expression state ctx stop with
     | Value.Int i -> Value.Int (i + 1)
     | _ -> raise Value.TypeError in
