@@ -233,15 +233,25 @@ and match_pattern state ctx value patt =
     end
   | _ -> raise NotImplemented
 
+(** This function takes a case list and try them one after the other until one matches.
+ * At this point, it runs the associated expression. *)
 and match_many_pattern state ctx value = function
 | [] -> raise MatchFailureException
 | case :: rest ->
   try
     let ctx' = match_pattern state ctx value case.pc_lhs in
-    run_expression state ctx' case.pc_rhs
+    match case.pc_guard with
+    | None -> run_expression state ctx' case.pc_rhs
+    | Some guard ->
+      if run_expression state ctx' guard = Value.Sumtype ("true", None) then
+        run_expression state ctx' case.pc_rhs
+      else
+        raise MatchFailureException
   with
   | MatchFailureException -> match_many_pattern state ctx value rest
 
+(** This function evaluates every given let expression and stores the resulting bindings
+ * in the context given in parameter. It returns the new context. *)
 and run_let_binding state ctx rec_flag bindings =
   let prealloc ctx binding =
     if rec_flag = Recursive then
