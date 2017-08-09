@@ -32,6 +32,7 @@ let rec string_of_value state = function
     name ^ " = " ^ string_of_value state value in
   let fields_s = BatList.of_enum @@ BatEnum.map string_of_field (BatMap.enum r) in
   "{" ^ BatString.join " ; " fields_s ^ "}"
+| Module m -> string_of_value state (Record m)
 
 let rec type_of_value = function
 | Int _ -> "int"
@@ -45,6 +46,7 @@ let rec type_of_value = function
 | Variant (name, Some v) -> "[> `" ^ name ^ " of " ^ type_of_value v ^ " ]"
 | Sumtype _ -> "sumtype"
 | Record _ -> "record"
+| Module _ -> "module"
 
 let print_value state v =
   let ty = type_of_value v in
@@ -65,5 +67,6 @@ let rec value_eq a b = match (a, b) with
 | (Sumtype (n1, Some v1), Sumtype (n2, Some v2)) -> n1 = n2 && value_eq v1 v2
 | (Sumtype _, Sumtype _) -> false
 | (Record r1, Record r2) -> BatMap.equal (=) r1 r2
+| (Module m1, Module m2) -> BatMap.equal (=) m1 m2
 | _ -> raise TypeError
 

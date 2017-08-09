@@ -23,7 +23,14 @@ let rec run_identifier state ctx = function
   |> State.get state
   |> value_of_alloc state
 | Ldot (path, id) -> (* module *)
-  Value.Int 0
+  begin
+    match run_identifier state ctx path with
+    | Value.Module md ->
+      let idx = BatMap.find id md in
+      let alloc = State.get state idx in
+      value_of_alloc state alloc
+    | _ -> raise Value.TypeError
+  end
 | Lapply _ -> raise @@ NotSupportedException "Lapply identifier"
 
 (** This function interprets an expression and returns the computed value. *)
@@ -76,7 +83,16 @@ and run_expression state ctx exp =
     | None -> None
     | Some v -> Some (run_expression state ctx v) in
     let name = Longident.last ident.txt in
-    Value.Sumtype (name, val_opt)
+    (** Check if the given constructor is a module name or an actual constructor. *)
+    begin
+      try
+        let idx = Context.find (Longident.last ident.txt) ctx in
+        match value_of_alloc state (State.get state idx) with
+        | Value.Module _ as md -> md
+        | _ -> raise Value.TypeError
+      with
+      | Not_found -> Value.Sumtype (name, val_opt)
+    end
   | Pexp_record (fields, with_clause) ->
     let base = match with_clause with
     | None -> BatMap.empty
@@ -281,6 +297,14 @@ and run_let_binding state ctx rec_flag bindings =
       match_pattern state ctx value binding.pvb_pat in
   BatList.fold_left prealloc ctx bindings
 
+and run_module_expression state ctx mod_expr =
+  match mod_expr.pmod_desc with
+  | Pmod_ident id -> run_identifier state ctx id.txt
+  | Pmod_structure str ->
+    let (ctx', _) = run_structure state ctx str in
+    Value.Module (Context.to_map ctx')
+  | _ -> raise NotImplemented
+
 (** This function executes a toplevel phrase. *)
 and run_structure_item state ctx item =
   match item.pstr_desc with
@@ -288,6 +312,11 @@ and run_structure_item state ctx item =
   | Pstr_value (rec_flag, bindings) ->
     let ctx' = run_let_binding state ctx rec_flag bindings in
     (ctx', Value.Sumtype ("()", None))
+  | Pstr_module m ->
+    let md = run_module_expression state ctx m.pmb_expr in
+    let idx = State.add state (State.Normal md) in
+    let ctx' = Context.add m.pmb_name.txt idx ctx in
+    (ctx', md)
   | _ -> raise NotImplemented
 
 (** This function evaluates a module structure. *)

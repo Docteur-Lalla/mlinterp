@@ -20,4 +20,8 @@ let find id ctx = BatList.fold_right BatMap.union ctx.opened_modules ctx.map
   |> BatMap.find id
 
 (** Check if the given id is in the map. *)
-let member id ctx = BatMap.mem id ctx.map
+let member id ctx = BatList.map (BatMap.mem id) ctx.opened_modules
+  |> BatList.fold_left (||) (BatMap.mem id ctx.map)
+
+(** Retrieve the inner map of a context. *)
+let to_map ctx = ctx.map
