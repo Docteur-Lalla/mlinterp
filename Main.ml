@@ -75,6 +75,7 @@ let rec repl state ctx =
       | Interpreter.ExceptionRaised exc -> print_endline @@ "Exception: " ^ ValueUtils.string_of_value state exc ; ctx in
       repl state ctx''
   with
+  | Syntaxerr.Error _ -> print_endline "Syntax error" ; repl state ctx
   | e -> raise e
 
 (** Entry-point of the interpreter. *)
