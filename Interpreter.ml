@@ -317,6 +317,21 @@ and run_structure_item state ctx item =
     let idx = State.add state (State.Normal md) in
     let ctx' = Context.add m.pmb_name.txt idx ctx in
     (ctx', md)
+  | Pstr_open op ->
+    begin
+      match run_identifier state ctx op.popen_lid.txt with
+      | Value.Module md -> (Context.open_module md ctx, Value.Sumtype ("()", None))
+      | _ -> raise Value.TypeError
+    end
+  | Pstr_include inc ->
+    begin
+      match run_module_expression state ctx inc.pincl_mod with
+      | Value.Module md ->
+        let map = Context.to_map ctx in
+        let map' = BatMap.union md map in
+        ({ Context.map = map' ; Context.opened_modules = Context.(ctx.opened_modules) }, Value.Sumtype ("()", None))
+      | _ -> raise Value.TypeError
+    end
   | _ -> raise NotImplemented
 
 (** This function evaluates a module structure. *)
