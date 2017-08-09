@@ -42,6 +42,11 @@ let read_toplevel_phrase () =
   done ;
   !cmd
 
+let initial_ctx state =
+  let raise_func = Value.Function (fun v -> raise @@ Interpreter.ExceptionRaised v) in
+  let idx = State.add state (State.Normal raise_func) in
+  Context.add "raise" idx Context.empty
+
 (** Read-Eval-Print Loop.
  * It reads a toplevel phrase, evaluates it and prints the result.
  * This function loops until the input is "#quit ;;". *)
@@ -66,7 +71,8 @@ let rec repl state ctx =
       | Interpreter.NotFunctionException v ->
         print_endline @@ "Value " ^ ValueUtils.string_of_value state v ^ " is not a function." ; ctx
       | Value.TypeError -> print_endline "Type error." ; ctx
-      | Interpreter.AssertFalseException -> print_endline "Assertion evaluated to false." ; ctx in
+      | Interpreter.AssertFalseException -> print_endline "Assertion evaluated to false." ; ctx
+      | Interpreter.ExceptionRaised exc -> print_endline @@ "Exception: " ^ ValueUtils.string_of_value state exc ; ctx in
       repl state ctx''
   with
   | e -> raise e
@@ -80,11 +86,13 @@ let () =
       get_contents filename
       |> Lexing.from_string
       |> Parse.implementation
-      |> Interpreter.run_structure state Context.empty
+      |> Interpreter.run_structure state (initial_ctx state)
       |> snd
       |> ValueUtils.print_value state
     with
-    | NoFilenameException -> repl (State.empty ()) Context.empty
+    | NoFilenameException ->
+      let state = State.empty () in
+      repl state (initial_ctx state)
   with
   | BadNumberOfFilesException n ->
     BatPrintf.printf "Error: expected one input file, got %n.\n" n

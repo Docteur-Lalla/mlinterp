@@ -8,6 +8,7 @@ exception MatchFailureException
 exception NotFunctionException of Value.t
 exception NotImplemented
 exception AssertFalseException
+exception ExceptionRaised of Value.t
 
 (** This function interprets a constant literal and returns the corresponding value. *)
 let run_constant = function
@@ -153,6 +154,14 @@ and run_expression state ctx exp =
       raise AssertFalseException
     else
       Value.Sumtype ("()", None)
+  | Pexp_try (exp, cases) ->
+    begin
+      try run_expression state ctx exp
+      with
+      | ExceptionRaised exc ->
+        try match_many_pattern state ctx exc cases
+        with MatchFailureException -> raise @@ ExceptionRaised exc
+    end
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
