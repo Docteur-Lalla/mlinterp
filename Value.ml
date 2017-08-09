@@ -15,3 +15,4 @@ type t =
 | Sumtype of string * t option
 | Record of (string, int) BatMap.t
 | Module of (string, int) BatMap.t
+| Functor of (t -> t)

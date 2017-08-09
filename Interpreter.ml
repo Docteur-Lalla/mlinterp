@@ -303,6 +303,19 @@ and run_module_expression state ctx mod_expr =
   | Pmod_structure str ->
     let (ctx', _) = run_structure state ctx str in
     Value.Module (Context.to_map ctx')
+  | Pmod_functor (id, _, expr) ->
+    let func md =
+      let idx = State.add state (State.Normal md) in
+      let ctx' = Context.add id.txt idx ctx in
+      run_module_expression state ctx' expr in
+    Value.Functor func
+  | Pmod_apply (fexp, mexp) ->
+    let md = run_module_expression state ctx mexp in
+    begin
+      match run_module_expression state ctx fexp with
+      | Value.Functor f -> f md
+      | _ -> raise Value.TypeError
+    end
   | _ -> raise NotImplemented
 
 (** This function executes a toplevel phrase. *)
