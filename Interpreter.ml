@@ -231,6 +231,19 @@ and match_pattern state ctx value patt =
           raise MatchFailureException
       | _ -> raise Value.TypeError
     end
+  | Ppat_interval (c1, c2) ->
+    let cst1 = run_constant c1 in
+    let cst2 = run_constant c2 in
+    begin
+      match (value, cst1, cst2) with
+      | Value.Int vi, Value.Int i1, Value.Int i2 ->
+        if i1 <= vi && vi <= i2 then ctx else raise MatchFailureException
+      | Value.Float vf, Value.Float f1, Value.Float f2 ->
+        if f1 <= vf && vf <= f2 then ctx else raise MatchFailureException
+      | Value.Char vc, Value.Char c1, Value.Char c2 ->
+        if c1 <= vc && vc <= c2 then ctx else raise MatchFailureException
+      | _ -> raise Value.TypeError
+    end
   | _ -> raise NotImplemented
 
 (** This function takes a case list and try them one after the other until one matches.
