@@ -33,20 +33,7 @@ and run_expression state ctx exp =
     let id = l.txt in
     run_identifier state ctx id
   | Pexp_let (rec_flag, bindings, expr) ->
-    let prealloc ctx binding =
-      if rec_flag = Recursive then
-        let alloc = State.Prealloc (binding.pvb_expr, ctx) in
-        let id = match binding.pvb_pat.ppat_desc with
-        | Ppat_var l -> l.txt
-        | _ -> raise @@ NotSupportedException "Non-variable pattern in recursive let-binding" in
-        let idx = State.add state alloc in
-        let ctx' = Context.add id idx ctx in
-        State.set state idx @@ State.Prealloc (binding.pvb_expr, ctx') ;
-        ctx'
-      else
-        let value = run_expression state ctx binding.pvb_expr in
-        match_pattern state ctx value binding.pvb_pat in
-    let ctx' = BatList.fold_left prealloc ctx bindings in
+    let ctx' = run_let_binding state ctx rec_flag bindings in
     run_expression state ctx' expr
   | Pexp_tuple exprs -> Value.Tuple (BatList.map (run_expression state ctx) exprs)
   | Pexp_array exprs ->
@@ -246,25 +233,28 @@ and match_many_pattern state ctx value = function
   with
   | MatchFailureException -> match_many_pattern state ctx value rest
 
+and run_let_binding state ctx rec_flag bindings =
+  let prealloc ctx binding =
+    if rec_flag = Recursive then
+      let alloc = State.Prealloc (binding.pvb_expr, ctx) in
+      let id = match binding.pvb_pat.ppat_desc with
+      | Ppat_var l -> l.txt
+      | _ -> raise @@ NotSupportedException "Non-variable pattern in recursive let-binding" in
+      let idx = State.add state alloc in
+      let ctx' = Context.add id idx ctx in
+      State.set state idx @@ State.Prealloc (binding.pvb_expr, ctx') ;
+      ctx'
+    else
+      let value = run_expression state ctx binding.pvb_expr in
+      match_pattern state ctx value binding.pvb_pat in
+  BatList.fold_left prealloc ctx bindings
+
 (** This function executes a toplevel phrase. *)
 and run_structure_item state ctx item =
   match item.pstr_desc with
   | Pstr_eval (exp, _) -> (ctx, run_expression state ctx exp)
   | Pstr_value (rec_flag, bindings) ->
-    let prealloc ctx binding =
-      if rec_flag = Recursive then
-        let alloc = State.Prealloc (binding.pvb_expr, ctx) in
-        let id = match binding.pvb_pat.ppat_desc with
-        | Ppat_var l -> l.txt
-        | _ -> raise @@ NotSupportedException "Non-variable pattern in recursive let-binding" in
-        let idx = State.add state alloc in
-        let ctx' = Context.add id idx ctx in
-        State.set state idx @@ State.Prealloc (binding.pvb_expr, ctx') ;
-        ctx'
-      else
-        let value = run_expression state ctx binding.pvb_expr in
-        match_pattern state ctx value binding.pvb_pat in
-    let ctx' = BatList.fold_left prealloc ctx bindings in
+    let ctx' = run_let_binding state ctx rec_flag bindings in
     (ctx', Value.Sumtype ("()", None))
   | _ -> raise NotImplemented
 
