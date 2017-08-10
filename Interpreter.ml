@@ -200,8 +200,28 @@ and run_expression state ctx exp =
     end
 
   | Pexp_constraint (e, _) -> run_expression state ctx e
+
   | Pexp_coerce (e, _, _) -> run_expression state ctx e
+
   | Pexp_newtype (_, e) -> run_expression state ctx e
+
+  | Pexp_pack mexp -> run_module_expression state ctx mexp
+
+  | Pexp_open (_, ident, exp) ->
+    begin
+      match run_identifier state ctx ident.txt with
+      | Value.Module md ->
+        let ctx' = Context.open_module md ctx in
+        run_expression state ctx' exp
+      | _ -> raise Value.TypeError
+    end
+
+  | Pexp_letmodule (ident, mexp, exp) ->
+    let id = ident.txt in
+    let md = run_module_expression state ctx mexp in
+    let idx = State.add state (State.Normal md) in
+    let ctx' = Context.add id idx ctx in
+    run_expression state ctx' exp
 
   | Pexp_poly _
   | Pexp_extension _
@@ -214,7 +234,7 @@ and run_expression state ctx exp =
 
   | Pexp_unreachable -> raise @@ NotSupportedException "Unreachable expressions"
 
-  | _ -> raise NotImplemented
+  (* | _ -> raise NotImplemented *)
 
 (** This function matches the given value with the pattern and returns a context with
  * the variables defined with the pattern. *)
