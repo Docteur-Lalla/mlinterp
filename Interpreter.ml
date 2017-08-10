@@ -415,6 +415,22 @@ and run_structure_item state ctx item =
     let ctx' = Context.add m.pmb_name.txt idx ctx in
     (ctx', md)
 
+  | Pstr_recmodule bindings ->
+    let prealloc ctx binding =
+      let exp = { pexp_desc = Pexp_pack binding.pmb_expr ; pexp_loc = Location.none ; pexp_attributes = [] } in
+      let alloc = State.Prealloc (exp, ctx) in
+      let idx = State.add state alloc in
+      Context.add binding.pmb_name.txt idx ctx in
+    let ctx' = BatList.fold_left prealloc ctx bindings in
+    let indices = BatList.map (fun b -> Context.find b.pmb_name.txt ctx') bindings in
+    let func ctx idx =
+      let alloc = match State.get state idx with
+      | State.Normal _ as n -> n
+      | State.Prealloc (exp, ctx') -> State.Prealloc (exp, ctx) in
+      State.set state idx alloc in
+    let _ = BatList.iter (func ctx') indices in
+    (ctx', Value.Sumtype ("()", None))
+
   | Pstr_open op ->
     begin
       match run_identifier state ctx op.popen_lid.txt with
@@ -431,8 +447,20 @@ and run_structure_item state ctx item =
         (ctx', Value.Sumtype ("()", None))
       | _ -> raise Value.TypeError
     end
+
+  | Pstr_type _
+  | Pstr_typext _
+  | Pstr_modtype _
+  | Pstr_primitive _
+  | Pstr_exception _ -> (ctx, Value.Sumtype ("()", None))
+
+  | Pstr_attribute _
+  | Pstr_extension _ -> raise @@ NotSupportedException "Extensions and attributes"
+
+  | Pstr_class _
+  | Pstr_class_type _ -> raise @@ NotSupportedException "Class related statements"
     
-  | _ -> raise NotImplemented
+  (* | _ -> raise NotImplemented *)
 
 (** This function evaluates a module structure. *)
 and run_structure state ctx =

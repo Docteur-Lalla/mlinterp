@@ -28,7 +28,7 @@ let rec string_of_value state = function
   let string_of_field (name, idx) =
     let value = match State.get state idx with
     | State.Normal value -> value
-    | State.Prealloc _ -> raise RuntimeException in
+    | State.Prealloc _ -> Sumtype ("...", None) in
     name ^ " = " ^ string_of_value state value in
   let fields_s = BatList.of_enum @@ BatEnum.map string_of_field (BatMap.enum r) in
   "{" ^ BatString.join " ; " fields_s ^ "}"
