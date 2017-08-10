@@ -26,5 +26,14 @@ let member id ctx = BatList.map (BatMap.mem id) ctx.opened_modules
 (** Retrieve the inner map of a context. *)
 let to_map ctx = ctx.map
 
+(** Build a context from the given map. *)
+let from_map map = { map = map ; opened_modules = [] }
+
+(** Include every binding of ctx' in ctx. *)
+let include_context ctx' ctx =
+  let map = BatMap.union ctx'.map ctx.map in
+  let op = ctx'.opened_modules @ ctx.opened_modules in
+  { map = map ; opened_modules = op }
+
 (** Add the given module to the list of the opened ones *)
 let open_module md ctx = { ctx with opened_modules = md :: ctx.opened_modules }

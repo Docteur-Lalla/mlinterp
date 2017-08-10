@@ -199,6 +199,15 @@ and run_expression state ctx exp =
         with MatchFailureException -> raise @@ ExceptionRaised exc
     end
 
+  | Pexp_poly _
+  | Pexp_extension _
+  | Pexp_new _
+  | Pexp_lazy _
+  | Pexp_send _
+  | Pexp_object _
+  | Pexp_override _
+  | Pexp_setinstvar _ -> raise @@ NotSupportedException "Lazy, extension and object-related expressions"
+
   | _ -> raise NotImplemented
 
 (** This function matches the given value with the pattern and returns a context with
@@ -385,9 +394,9 @@ and run_structure_item state ctx item =
     begin
       match run_module_expression state ctx inc.pincl_mod with
       | Value.Module md ->
-        let map = Context.to_map ctx in
-        let map' = BatMap.union md map in
-        ({ Context.map = map' ; Context.opened_modules = Context.(ctx.opened_modules) }, Value.Sumtype ("()", None))
+        let md_ctx = Context.from_map md in
+        let ctx' = Context.include_context md_ctx ctx in
+        (ctx', Value.Sumtype ("()", None))
       | _ -> raise Value.TypeError
     end
     
