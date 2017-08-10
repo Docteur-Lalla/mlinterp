@@ -337,15 +337,18 @@ and run_let_binding state ctx rec_flag bindings =
 and run_module_expression state ctx mod_expr =
   match mod_expr.pmod_desc with
   | Pmod_ident id -> run_identifier state ctx id.txt
+
   | Pmod_structure str ->
     let (ctx', _) = run_structure state ctx str in
     Value.Module (Context.to_map ctx')
+
   | Pmod_functor (id, _, expr) ->
     let func md =
       let idx = State.add state (State.Normal md) in
       let ctx' = Context.add id.txt idx ctx in
       run_module_expression state ctx' expr in
     Value.Functor func
+
   | Pmod_apply (fexp, mexp) ->
     let md = run_module_expression state ctx mexp in
     begin
@@ -353,26 +356,31 @@ and run_module_expression state ctx mod_expr =
       | Value.Functor f -> f md
       | _ -> raise Value.TypeError
     end
+
   | _ -> raise NotImplemented
 
 (** This function executes a toplevel phrase. *)
 and run_structure_item state ctx item =
   match item.pstr_desc with
   | Pstr_eval (exp, _) -> (ctx, run_expression state ctx exp)
+
   | Pstr_value (rec_flag, bindings) ->
     let ctx' = run_let_binding state ctx rec_flag bindings in
     (ctx', Value.Sumtype ("()", None))
+
   | Pstr_module m ->
     let md = run_module_expression state ctx m.pmb_expr in
     let idx = State.add state (State.Normal md) in
     let ctx' = Context.add m.pmb_name.txt idx ctx in
     (ctx', md)
+
   | Pstr_open op ->
     begin
       match run_identifier state ctx op.popen_lid.txt with
       | Value.Module md -> (Context.open_module md ctx, Value.Sumtype ("()", None))
       | _ -> raise Value.TypeError
     end
+
   | Pstr_include inc ->
     begin
       match run_module_expression state ctx inc.pincl_mod with
@@ -382,6 +390,7 @@ and run_structure_item state ctx item =
         ({ Context.map = map' ; Context.opened_modules = Context.(ctx.opened_modules) }, Value.Sumtype ("()", None))
       | _ -> raise Value.TypeError
     end
+    
   | _ -> raise NotImplemented
 
 (** This function evaluates a module structure. *)
