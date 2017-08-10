@@ -389,7 +389,16 @@ and run_module_expression state ctx mod_expr =
       | _ -> raise Value.TypeError
     end
 
-  | _ -> raise NotImplemented
+  | Pmod_unpack exp ->
+    begin
+      match run_expression state ctx exp with
+      | Value.Module _ as md -> md
+      | _ -> raise Value.TypeError
+    end
+
+  | Pmod_constraint (mexp, _) -> run_module_expression state ctx mexp
+
+  | Pmod_extension _ -> raise @@ NotSupportedException "Extensions"
 
 (** This function executes a toplevel phrase. *)
 and run_structure_item state ctx item =
