@@ -97,8 +97,7 @@ and run_expression state ctx exp =
     (** Check if the given constructor is a module name or an actual constructor. *)
     begin
       try
-        let idx = Context.find (Longident.last ident.txt) ctx in
-        match value_of_alloc state (State.get state idx) with
+        match run_identifier state ctx ident.txt with
         | Value.Module _ as md -> md
         | _ -> raise Value.TypeError
       with
@@ -425,7 +424,7 @@ and run_structure_item state ctx item =
     let indices = BatList.map (fun b -> Context.find b.pmb_name.txt ctx') bindings in
     let func ctx idx =
       let alloc = match State.get state idx with
-      | State.Normal _ as n -> n
+      | State.Normal _ as n -> n (* not supposed to happen *)
       | State.Prealloc (exp, ctx') -> State.Prealloc (exp, ctx) in
       State.set state idx alloc in
     let _ = BatList.iter (func ctx') indices in
