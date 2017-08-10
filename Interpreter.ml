@@ -199,6 +199,10 @@ and run_expression state ctx exp =
         with MatchFailureException -> raise @@ ExceptionRaised exc
     end
 
+  | Pexp_constraint (e, _) -> run_expression state ctx e
+  | Pexp_coerce (e, _, _) -> run_expression state ctx e
+  | Pexp_newtype (_, e) -> run_expression state ctx e
+
   | Pexp_poly _
   | Pexp_extension _
   | Pexp_new _
@@ -207,6 +211,8 @@ and run_expression state ctx exp =
   | Pexp_object _
   | Pexp_override _
   | Pexp_setinstvar _ -> raise @@ NotSupportedException "Lazy, extension and object-related expressions"
+
+  | Pexp_unreachable -> raise @@ NotSupportedException "Unreachable expressions"
 
   | _ -> raise NotImplemented
 
