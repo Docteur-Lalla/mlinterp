@@ -66,8 +66,7 @@ and run_expression state ctx exp =
 
   | Pexp_apply (fexp, arg_exps) ->
     let fval = run_expression state ctx fexp in
-    let args = BatList.map snd arg_exps
-      |> BatList.map (run_expression state ctx) in
+    let args = BatList.map (run_expression state ctx % snd) arg_exps in
     let rec apply_func fval = function
     | [] -> fval
     | arg :: rest ->
@@ -84,15 +83,11 @@ and run_expression state ctx exp =
     run_expression state ctx app
 
   | Pexp_variant (name, exp_opt) ->
-    let val_opt = match exp_opt with
-      | None -> None
-      | Some v -> Some (run_expression state ctx v) in
+    let val_opt = BatOption.bind exp_opt (BatOption.some % run_expression state ctx) in
     Value.Variant (name, val_opt)
 
   | Pexp_construct (ident, exp_opt) ->
-    let val_opt = match exp_opt with
-    | None -> None
-    | Some v -> Some (run_expression state ctx v) in
+    let val_opt = BatOption.bind exp_opt (BatOption.some % run_expression state ctx) in
     let name = Longident.last ident.txt in
     (** Check if the given constructor is a module name or an actual constructor. *)
     begin
@@ -149,10 +144,7 @@ and run_expression state ctx exp =
     Value.nil
 
   | Pexp_for (patt, start, stop, dir, body) ->
-    let value = ref (run_expression state ctx start) in
-    let for_iter ctx value patt =
-      let ctx' = match_pattern state ctx value patt in
-      ignore @@ run_expression state ctx' body in
+    (* This function computes the value of the iterator for the next loop iteration. *)
     let iter = function
     | Value.Int i ->
       begin
@@ -161,9 +153,18 @@ and run_expression state ctx exp =
         | Downto -> Value.Int (i - 1)
       end
     | _ -> raise Value.TypeError in
+
+    (* This is the stop value of the loop. *)
     let stop_value = match run_expression state ctx stop with
     | Value.Int i -> Value.Int (i + 1)
     | _ -> raise Value.TypeError in
+
+    let value = ref (run_expression state ctx start) in
+
+    (* This function executes the actual body of the loop. *)
+    let for_iter ctx value patt =
+      let ctx' = match_pattern state ctx value patt in
+      ignore @@ run_expression state ctx' body in
 
     while ValueUtils.value_eq !value stop_value = false do
       for_iter ctx !value patt ;
@@ -176,11 +177,7 @@ and run_expression state ctx exp =
     if cond_value = Value.true_val then
       run_expression state ctx exp1
     else
-      begin
-        match exp2_opt with
-        | Some exp2 -> run_expression state ctx exp2
-        | None -> Value.nil
-      end
+      BatOption.map_default (run_expression state ctx) Value.nil exp2_opt
 
   | Pexp_assert exp ->
     let value = run_expression state ctx exp in
