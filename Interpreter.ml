@@ -134,7 +134,7 @@ and run_expression state ctx exp =
         let value = run_expression state ctx exp in
         let idx = BatMap.find field r in
         State.set state idx (State.Normal value) ;
-        Value.Sumtype ("()", None)
+        Value.nil
       | _ -> raise Value.TypeError
     end
 
@@ -143,10 +143,10 @@ and run_expression state ctx exp =
     run_expression state ctx exp2
 
   | Pexp_while (cond, expr) ->
-    while run_expression state ctx cond = Value.Sumtype ("true", None) do
+    while run_expression state ctx cond = Value.true_val do
       ignore @@ run_expression state ctx expr
     done ;
-    Value.Sumtype ("()", None)
+    Value.nil
 
   | Pexp_for (patt, start, stop, dir, body) ->
     let value = ref (run_expression state ctx start) in
@@ -169,25 +169,25 @@ and run_expression state ctx exp =
       for_iter ctx !value patt ;
       value := iter !value
     done ;
-    Value.Sumtype ("()", None)
+    Value.nil
 
   | Pexp_ifthenelse (cond, exp1, exp2_opt) ->
     let cond_value = run_expression state ctx cond in
-    if cond_value = Value.Sumtype ("true", None) then
+    if cond_value = Value.true_val then
       run_expression state ctx exp1
     else
       begin
         match exp2_opt with
         | Some exp2 -> run_expression state ctx exp2
-        | None -> Value.Sumtype ("()", None)
+        | None -> Value.nil
       end
 
   | Pexp_assert exp ->
     let value = run_expression state ctx exp in
-    if value = Value.Sumtype ("false", None) then
+    if value = Value.false_val then
       raise AssertFalseException
     else
-      Value.Sumtype ("()", None)
+      Value.nil
 
   | Pexp_try (exp, cases) ->
     begin
@@ -340,7 +340,7 @@ and match_many_pattern state ctx value = function
     match case.pc_guard with
     | None -> run_expression state ctx' case.pc_rhs
     | Some guard ->
-      if run_expression state ctx' guard = Value.Sumtype ("true", None) then
+      if run_expression state ctx' guard = Value.true_val then
         run_expression state ctx' case.pc_rhs
       else
         raise MatchFailureException
@@ -406,7 +406,7 @@ and run_structure_item state ctx item =
 
   | Pstr_value (rec_flag, bindings) ->
     let ctx' = run_let_binding state ctx rec_flag bindings in
-    (ctx', Value.Sumtype ("()", None))
+    (ctx', Value.nil)
 
   | Pstr_module m ->
     let md = run_module_expression state ctx m.pmb_expr in
@@ -428,12 +428,12 @@ and run_structure_item state ctx item =
       | State.Prealloc (exp, ctx') -> State.Prealloc (exp, ctx) in
       State.set state idx alloc in
     let _ = BatList.iter (func ctx') indices in
-    (ctx', Value.Sumtype ("()", None))
+    (ctx', Value.nil)
 
   | Pstr_open op ->
     begin
       match run_identifier state ctx op.popen_lid.txt with
-      | Value.Module md -> (Context.open_module md ctx, Value.Sumtype ("()", None))
+      | Value.Module md -> (Context.open_module md ctx, Value.nil)
       | _ -> raise Value.TypeError
     end
 
@@ -443,7 +443,7 @@ and run_structure_item state ctx item =
       | Value.Module md ->
         let md_ctx = Context.from_map md in
         let ctx' = Context.include_context md_ctx ctx in
-        (ctx', Value.Sumtype ("()", None))
+        (ctx', Value.nil)
       | _ -> raise Value.TypeError
     end
 
@@ -451,7 +451,7 @@ and run_structure_item state ctx item =
   | Pstr_typext _
   | Pstr_modtype _
   | Pstr_primitive _
-  | Pstr_exception _ -> (ctx, Value.Sumtype ("()", None))
+  | Pstr_exception _ -> (ctx, Value.nil)
 
   | Pstr_attribute _
   | Pstr_extension _ -> raise @@ NotSupportedException "Extensions and attributes"

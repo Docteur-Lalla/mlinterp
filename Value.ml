@@ -16,3 +16,7 @@ type t =
 | Record of (string, int) BatMap.t
 | Module of (string, int) BatMap.t
 | Functor of (t -> t)
+
+let nil = Sumtype ("()", None)
+let true_val = Sumtype ("true", None)
+let false_val = Sumtype ("false", None)
