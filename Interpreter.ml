@@ -413,7 +413,11 @@ and run_structure_item state ctx item =
 
   | Pstr_recmodule bindings ->
     let prealloc ctx binding =
-      let exp = { pexp_desc = Pexp_pack binding.pmb_expr ; pexp_loc = Location.none ; pexp_attributes = [] } in
+      let exp = {
+        pexp_desc = Pexp_pack binding.pmb_expr ;
+        pexp_loc = Location.none ;
+        pexp_attributes = []
+      } in
       let alloc = State.Prealloc (exp, ctx) in
       let idx = State.add state alloc in
       Context.add binding.pmb_name.txt idx ctx in
@@ -424,7 +428,7 @@ and run_structure_item state ctx item =
       | State.Normal _ as n -> n (* not supposed to happen *)
       | State.Prealloc (exp, ctx') -> State.Prealloc (exp, ctx) in
       State.set state idx alloc in
-    let _ = BatList.iter (func ctx') indices in
+    BatList.iter (func ctx') indices ;
     (ctx', Value.nil)
 
   | Pstr_open op ->
@@ -438,8 +442,7 @@ and run_structure_item state ctx item =
     begin
       match run_module_expression state ctx inc.pincl_mod with
       | Value.Module md ->
-        let md_ctx = Context.from_map md in
-        let ctx' = Context.include_context md_ctx ctx in
+        let ctx' = Context.from_map md |> flip Context.include_context ctx in
         (ctx', Value.nil)
       | _ -> raise Value.TypeError
     end
