@@ -35,6 +35,7 @@ let rec string_of_value state = function
 | Module m -> string_of_value state (Record m)
 | Functor _ -> "<functor>"
 
+(** Get the string representation of the given value's type. *)
 let rec type_of_value = function
 | Int _ -> "int"
 | Float _ -> "float"
@@ -50,10 +51,12 @@ let rec type_of_value = function
 | Module _ -> "module"
 | Functor _ -> "functor"
 
+(** Print the value in stdout. *)
 let print_value state v =
   let ty = type_of_value v in
   print_endline @@ "val " ^ string_of_value state v ^ " : " ^ ty
 
+(** Equality check between two Value.t. *)
 let rec value_eq a b = match (a, b) with
 | (Int i1, Int i2) -> i1 = i2
 | (Float f1, Float f2) -> f1 = f2
