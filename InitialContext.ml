@@ -4,6 +4,15 @@ let raise_func = Value.Function (fun v -> raise @@ Interpreter.ExceptionRaised v
 let invalid_arg_func = Value.Function (fun s -> raise @@ Interpreter.ExceptionRaised (Value.Sumtype ("Invalid_argument", Some s)))
 let failwith_func = Value.Function (fun s -> raise @@ Interpreter.ExceptionRaised (Value.Sumtype ("Failure", Some s)))
 
+let wrap_function unwrap_val wrap_val op = Value.Function (wrap_val % op % unwrap_val)
+
+let int_int_function op =
+  let wrap i = Value.Int i in
+  let unwrap = function
+  | Value.Int i -> i
+  | _ -> raise Value.TypeError in
+  wrap_function unwrap wrap op
+
 let int_binary_operator op =
   let outer = function
   | Value.Int i1 ->
@@ -60,9 +69,15 @@ let not_equal =
     Value.Function inner in
   Value.Function outer
 
-let int_int_function op =
+(*let int_int_function op =
   let inner = function
   | Value.Int i -> Value.Int (op i)
+  | _ -> raise Value.TypeError in
+  Value.Function inner*)
+
+let float_float_function op =
+  let inner = function
+  | Value.Float f -> Value.Float (op f)
   | _ -> raise Value.TypeError in
   Value.Function inner
 
@@ -82,11 +97,24 @@ let initial_context = [
   ("mod", int_binary_operator ( mod ));
 
   ("abs", int_int_function abs) ;
+  ("succ", int_int_function succ) ;
+  ("pred", int_int_function pred) ;
+  ("~-", int_int_function (~-)) ;
+  ("~+", int_int_function (~-)) ;
+
+  ("land", int_binary_operator (land)) ;
+  ("lor", int_binary_operator (lor)) ;
+  ("lxor", int_binary_operator (lxor)) ;
+  ("lsl", int_binary_operator (lsl)) ;
+  ("lsr", int_binary_operator (lsr)) ;
+  ("asr", int_binary_operator (asr)) ;
+  ("lnot", int_int_function lnot) ;
 
   ("+.", float_binary_operator ( +. )) ;
   ("-.", float_binary_operator ( -. )) ;
   ("*.", float_binary_operator ( *. )) ;
   ("/.", float_binary_operator ( /. )) ;
+  ("**", float_binary_operator ( ** )) ;
 
   ("&&", bool_binary_operator ( && )) ;
   ("||", bool_binary_operator ( || ))
