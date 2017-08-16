@@ -48,17 +48,40 @@ let bool_binary_operator op =
   | _ -> raise Value.TypeError in
   Value.Function outer
 
+let equal =
+  let outer v1 =
+    let inner v2 = Value.Sumtype (string_of_bool @@ ValueUtils.value_eq v1 v2, None) in
+    Value.Function inner in
+  Value.Function outer
+
+let not_equal =
+  let outer v1 =
+    let inner v2 = Value.Sumtype (string_of_bool @@ not @@ ValueUtils.value_eq v1 v2, None) in
+    Value.Function inner in
+  Value.Function outer
+
+let int_int_function op =
+  let inner = function
+  | Value.Int i -> Value.Int (op i)
+  | _ -> raise Value.TypeError in
+  Value.Function inner
+
 let initial_context = [
   ("raise", raise_func) ;
   ("raise_notrace", raise_func) ;
   ("invalid_arg", invalid_arg_func) ;
   ("failwith", failwith_func) ;
 
+  ("=", equal) ;
+  ("<>", not_equal) ;
+
   ("+", int_binary_operator ( + )) ;
   ("-", int_binary_operator ( - )) ;
   ("*", int_binary_operator ( * )) ;
   ("/", int_binary_operator ( / )) ;
   ("mod", int_binary_operator ( mod ));
+
+  ("abs", int_int_function abs) ;
 
   ("+.", float_binary_operator ( +. )) ;
   ("-.", float_binary_operator ( -. )) ;
