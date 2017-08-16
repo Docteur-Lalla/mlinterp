@@ -61,6 +61,7 @@ and run_expression state ctx exp =
       |> flip (run_expression state) expr in
     Value.Function func
 
+  (* Labelled and optional arguments require a typecheck to reorder the arguments so they fit in. *)
   | Pexp_fun (Labelled _, _, _, _)
   | Pexp_fun (Optional _, _, _, _) -> raise @@ NotSupportedException "Labelled and optional argument"
 
@@ -100,12 +101,14 @@ and run_expression state ctx exp =
     end
 
   | Pexp_record (fields, with_clause) ->
+    (* Get the base record (given by the "with" keyword) if any. *)
     let base = match with_clause with
     | None -> BatMap.empty
     | Some exp ->
       match run_expression state ctx exp with
       | Value.Record r -> r
       | _ -> raise Value.TypeError in
+    (* Add the field 'ident = value' to the record. *)
     let add_to_record r (ident, exp) =
       let name = Longident.last ident.txt in
       let value = run_expression state ctx exp in
@@ -195,6 +198,7 @@ and run_expression state ctx exp =
         with MatchFailureException -> raise @@ ExceptionRaised exc
     end
 
+  (* Type-related expressions, nothing can be done without a proper type-checker. *)
   | Pexp_constraint (e, _)
   | Pexp_coerce (e, _, _)
   | Pexp_newtype (_, e)
@@ -411,6 +415,9 @@ and run_structure_item state ctx item =
     let ctx' = Context.add m.pmb_name.txt idx ctx in
     (ctx', md)
 
+  (* With recursive modules, each module must be preallocated like recursive functions.
+   * Then, each member that depends on another module should also be preallocated (not implemented !!!).
+   *)
   | Pstr_recmodule bindings ->
     let prealloc ctx binding =
       let exp = {
@@ -418,8 +425,7 @@ and run_structure_item state ctx item =
         pexp_loc = Location.none ;
         pexp_attributes = []
       } in
-      let alloc = State.Prealloc (exp, ctx) in
-      let idx = State.add state alloc in
+      let idx = State.add state (State.Prealloc (exp, ctx)) in
       Context.add binding.pmb_name.txt idx ctx in
     let ctx' = BatList.fold_left prealloc ctx bindings in
     let indices = BatList.map (fun b -> Context.find b.pmb_name.txt ctx') bindings in
@@ -447,6 +453,7 @@ and run_structure_item state ctx item =
       | _ -> raise Value.TypeError
     end
 
+  (* Type-related expressions requiring an actual type-checker. *)
   | Pstr_type _
   | Pstr_typext _
   | Pstr_modtype _
