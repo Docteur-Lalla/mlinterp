@@ -1,6 +1,8 @@
 open Batteries
 
 let raise_func = Value.Function (fun v -> raise @@ Interpreter.ExceptionRaised v)
+let invalid_arg_func = Value.Function (fun s -> raise @@ Interpreter.ExceptionRaised (Value.Sumtype ("Invalid_argument", Some s)))
+let failwith_func = Value.Function (fun s -> raise @@ Interpreter.ExceptionRaised (Value.Sumtype ("Failure", Some s)))
 
 let int_binary_operator op =
   let outer = function
@@ -48,6 +50,10 @@ let bool_binary_operator op =
 
 let initial_context = [
   ("raise", raise_func) ;
+  ("raise_notrace", raise_func) ;
+  ("invalid_arg", invalid_arg_func) ;
+  ("failwith", failwith_func) ;
+
   ("+", int_binary_operator ( + )) ;
   ("-", int_binary_operator ( - )) ;
   ("*", int_binary_operator ( * )) ;
@@ -67,4 +73,7 @@ let populate state =
   let func ctx (name, value) =
     let idx = State.add state (State.Normal value) in
     Context.add name idx ctx in
-  BatList.fold_left func Context.empty initial_context
+  let map = Context.to_map @@ BatList.fold_left func Context.empty initial_context in
+  let idx = State.add state (State.Normal (Value.Module map)) in
+  let ctx = Context.add "Pervasives" idx Context.empty in
+  Context.open_module map ctx
