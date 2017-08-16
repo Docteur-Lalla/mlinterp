@@ -22,6 +22,30 @@ let float_binary_operator op =
   | _ -> raise Value.TypeError in
   Value.Function outer
 
+let bool_binary_operator op =
+  let bool_of_string = function
+  | "true" -> true
+  | "false" -> false
+  | _ -> false in
+
+  let string_of_bool = function
+  | true -> "true"
+  | false -> "false" in
+
+  let outer = function
+  | Value.Sumtype ("true" as b1s, None)
+  | Value.Sumtype ("false" as b1s, None) ->
+    let inner = function
+    | Value.Sumtype ("true" as b2s, None)
+    | Value.Sumtype ("false" as b2s, None) ->
+      let b1 = bool_of_string b1s in
+      let b2 = bool_of_string b2s in
+      Value.Sumtype (string_of_bool @@ op b1 b2, None)
+    | _ -> raise Value.TypeError in
+    Value.Function inner
+  | _ -> raise Value.TypeError in
+  Value.Function outer
+
 let initial_context = [
   ("raise", raise_func) ;
   ("+", int_binary_operator ( + )) ;
@@ -33,7 +57,10 @@ let initial_context = [
   ("+.", float_binary_operator ( +. )) ;
   ("-.", float_binary_operator ( -. )) ;
   ("*.", float_binary_operator ( *. )) ;
-  ("/.", float_binary_operator ( /. ))
+  ("/.", float_binary_operator ( /. )) ;
+
+  ("&&", bool_binary_operator ( && )) ;
+  ("||", bool_binary_operator ( || ))
 ]
 
 let populate state =
