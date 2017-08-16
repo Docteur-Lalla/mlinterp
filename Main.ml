@@ -42,11 +42,6 @@ let read_toplevel_phrase () =
   done ;
   !cmd
 
-let initial_ctx state =
-  let raise_func = Value.Function (fun v -> raise @@ Interpreter.ExceptionRaised v) in
-  let idx = State.add state (State.Normal raise_func) in
-  Context.add "raise" idx Context.empty
-
 (** Read-Eval-Print Loop.
  * It reads a toplevel phrase, evaluates it and prints the result.
  * This function loops until the input is "#quit ;;". *)
@@ -87,13 +82,13 @@ let () =
       get_contents filename
       |> Lexing.from_string
       |> Parse.implementation
-      |> Interpreter.run_structure state (initial_ctx state)
+      |> Interpreter.run_structure state (InitialContext.populate state)
       |> snd
       |> ValueUtils.print_value state
     with
     | NoFilenameException ->
       let state = State.empty () in
-      repl state (initial_ctx state)
+      repl state (InitialContext.populate state)
   with
   | BadNumberOfFilesException n ->
     BatPrintf.printf "Error: expected one input file, got %n.\n" n

@@ -6,6 +6,7 @@ CMOFILES= \
 	State.cmo \
 	ValueUtils.cmo \
 	Interpreter.cmo \
+	InitialContext.cmo \
 	Main.cmo
 
 %.cmo: %.ml
