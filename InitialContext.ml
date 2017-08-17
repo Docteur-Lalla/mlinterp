@@ -4,34 +4,19 @@ let raise_func = Value.Function (fun v -> raise @@ Interpreter.ExceptionRaised v
 let invalid_arg_func = Value.Function (fun s -> raise @@ Interpreter.ExceptionRaised (Value.Sumtype ("Invalid_argument", Some s)))
 let failwith_func = Value.Function (fun s -> raise @@ Interpreter.ExceptionRaised (Value.Sumtype ("Failure", Some s)))
 
+let id x = x
+
 let wrap_function unwrap_val wrap_val op = Value.Function (wrap_val % op % unwrap_val)
+let wrap_function2 unwrap1 unwrap2 wrap op =
+  let inner v1 = wrap_function unwrap2 wrap (op v1) in
+  let outer wv1 = inner (unwrap1 wv1) in
+  Value.from_function outer
 
-let int_int_function op =
-  let wrap i = Value.Int i in
-  let unwrap = function
-  | Value.Int i -> i
-  | _ -> raise Value.TypeError in
-  wrap_function unwrap wrap op
+let int_int_function = wrap_function Value.to_int Value.from_int
+let float_float_function = wrap_function Value.to_float Value.from_float
 
-let int_binary_operator op =
-  let outer = function
-  | Value.Int i1 ->
-    let inner = function
-    | Value.Int i2 -> Value.Int (op i1 i2)
-    | _ -> raise Value.TypeError in
-    Value.Function inner
-  | _ -> raise Value.TypeError in
-  Value.Function outer
-
-let float_binary_operator op =
-  let outer = function
-  | Value.Float f1 ->
-    let inner = function
-    | Value.Float f2 -> Value.Float (op f1 f2)
-    | _ -> raise Value.TypeError in
-    Value.Function inner
-  | _ -> raise Value.TypeError in
-  Value.Function outer
+let int_binary_operator = wrap_function2 Value.to_int Value.to_int Value.from_int
+let float_binary_operator = wrap_function2 Value.to_float Value.to_float Value.from_float
 
 let bool_binary_operator op =
   let bool_of_string = function
@@ -68,18 +53,6 @@ let not_equal =
     let inner v2 = Value.Sumtype (string_of_bool @@ not @@ ValueUtils.value_eq v1 v2, None) in
     Value.Function inner in
   Value.Function outer
-
-(*let int_int_function op =
-  let inner = function
-  | Value.Int i -> Value.Int (op i)
-  | _ -> raise Value.TypeError in
-  Value.Function inner*)
-
-let float_float_function op =
-  let inner = function
-  | Value.Float f -> Value.Float (op f)
-  | _ -> raise Value.TypeError in
-  Value.Function inner
 
 let initial_context = [
   ("raise", raise_func) ;
