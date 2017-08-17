@@ -46,3 +46,7 @@ let from_sumtype (s, v) = Sumtype (s, v)
 let from_record r = Record r
 let from_module m = Module m
 let from_functor f = Functor f
+
+let from_bool = function
+| true -> true_val
+| false -> false_val

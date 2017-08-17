@@ -1,12 +1,21 @@
 open Batteries
 
+(** The raise function raises the exception given as argument. *)
 let raise_func = Value.Function (fun v -> raise @@ Interpreter.ExceptionRaised v)
+
+(** Function that raises an Invalid_argument exception. *)
 let invalid_arg_func = Value.Function (fun s -> raise @@ Interpreter.ExceptionRaised (Value.Sumtype ("Invalid_argument", Some s)))
+
+(** Function that raises a Failure exception. *)
 let failwith_func = Value.Function (fun s -> raise @@ Interpreter.ExceptionRaised (Value.Sumtype ("Failure", Some s)))
 
+(* The identity function that returns its argument. *)
 let id x = x
 
+(** A function that takes a function and returns the corresponding Value.Function. *)
 let wrap_function unwrap_val wrap_val op = Value.Function (wrap_val % op % unwrap_val)
+
+(** This function is the same as wrap_function but for functions that take two arguments. *)
 let wrap_function2 unwrap1 unwrap2 wrap op =
   let inner v1 = wrap_function unwrap2 wrap (op v1) in
   let outer wv1 = inner (unwrap1 wv1) in
@@ -42,11 +51,7 @@ let bool_binary_operator op =
   | _ -> raise Value.TypeError in
   Value.Function outer
 
-let equal =
-  let outer v1 =
-    let inner v2 = Value.Sumtype (string_of_bool @@ ValueUtils.value_eq v1 v2, None) in
-    Value.Function inner in
-  Value.Function outer
+let equal = wrap_function2 id id Value.from_bool ValueUtils.value_eq
 
 let not_equal =
   let outer v1 =
