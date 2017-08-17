@@ -89,6 +89,26 @@ let initial_context = [
   ("/.", float_binary_operator ( /. )) ;
   ("**", float_binary_operator ( ** )) ;
 
+  ("sqrt", float_float_function ( sqrt )) ;
+  ("exp", float_float_function ( exp )) ;
+  ("log", float_float_function ( log )) ;
+  ("log10", float_float_function ( log10 )) ;
+  ("expm1", float_float_function ( expm1 )) ;
+  ("log1p", float_float_function ( log1p )) ;
+  ("cos", float_float_function ( cos )) ;
+  ("sin", float_float_function ( sin )) ;
+  ("tan", float_float_function ( tan )) ;
+  ("acos", float_float_function ( acos )) ;
+  ("asin", float_float_function ( asin )) ;
+  ("atan", float_float_function ( atan )) ;
+  ("atan2", float_binary_operator ( atan2 )) ;
+  ("cosh", float_float_function ( cosh )) ;
+  ("sinh", float_float_function ( sinh )) ;
+  ("tanh", float_float_function ( tanh )) ;
+  ("ceil", float_float_function ( ceil )) ;
+  ("floor", float_float_function ( floor )) ;
+  ("abs_float", float_float_function ( abs_float )) ;
+
   ("&&", bool_binary_operator ( && )) ;
   ("||", bool_binary_operator ( || ))
 ]
