@@ -26,6 +26,7 @@ let float_float_function = wrap_function Value.to_float Value.from_float
 
 let int_binary_operator = wrap_function2 Value.to_int Value.to_int Value.from_int
 let float_binary_operator = wrap_function2 Value.to_float Value.to_float Value.from_float
+let string_binary_operator = wrap_function2 Value.to_string Value.to_string Value.from_string
 
 let bool_binary_operator op =
   let bool_of_string = function
@@ -52,12 +53,11 @@ let bool_binary_operator op =
   Value.Function outer
 
 let equal = wrap_function2 id id Value.from_bool ValueUtils.value_eq
-
-let not_equal =
-  let outer v1 =
-    let inner v2 = Value.Sumtype (string_of_bool @@ not @@ ValueUtils.value_eq v1 v2, None) in
-    Value.Function inner in
-  Value.Function outer
+let not_equal = wrap_function2 id id Value.from_bool (fun a b -> not @@ ValueUtils.value_eq a b)
+let lesser_than = wrap_function2 id id Value.from_bool ValueUtils.value_lt
+let lesser_or_equal = wrap_function2 id id Value.from_bool (fun a b -> ValueUtils.value_eq a b || ValueUtils.value_lt a b)
+let greater_than = wrap_function2 id id Value.from_bool (fun a b -> not (ValueUtils.value_eq a b || ValueUtils.value_lt a b))
+let greater_or_equal = wrap_function2 id id Value.from_bool (fun a b -> not @@ ValueUtils.value_lt a b)
 
 let initial_context = [
   ("raise", raise_func) ;
@@ -67,6 +67,10 @@ let initial_context = [
 
   ("=", equal) ;
   ("<>", not_equal) ;
+  ("<", lesser_than) ;
+  ("<=", lesser_or_equal) ;
+  (">", greater_than) ;
+  (">=", greater_or_equal) ;
 
   ("+", int_binary_operator ( + )) ;
   ("-", int_binary_operator ( - )) ;
@@ -115,7 +119,9 @@ let initial_context = [
   ("abs_float", float_float_function ( abs_float )) ;
 
   ("&&", bool_binary_operator ( && )) ;
-  ("||", bool_binary_operator ( || ))
+  ("||", bool_binary_operator ( || )) ;
+
+  ("^", string_binary_operator ( ^ ))
 ]
 
 let populate state =

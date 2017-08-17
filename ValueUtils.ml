@@ -76,3 +76,8 @@ let rec value_eq a b = match (a, b) with
 | (Functor _, Functor _) -> false
 | _ -> raise TypeError
 
+let value_lt a b = match (a, b) with
+| (Int i1, Int i2) -> i1 < i2
+| (Float f1, Float f2) -> f1 < f2
+| (Char c1, Char c2) -> c1 < c2
+| _ -> raise TypeError
