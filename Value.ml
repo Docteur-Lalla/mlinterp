@@ -34,6 +34,11 @@ let to_record = function Record r -> r | _ -> raise TypeError
 let to_module = function Module m -> m | _ -> raise TypeError
 let to_functor = function Functor f -> f | _ -> raise TypeError
 
+let to_bool = function
+| Sumtype ("true", None) -> true
+| Sumtype ("false", None) -> false
+| _ -> raise TypeError
+
 let from_int i = Int i
 let from_float f = Float f
 let from_char c = Char c

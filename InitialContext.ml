@@ -67,6 +67,8 @@ let lesser_or_equal = wrap_function2 id id Value.from_bool (fun a b -> ValueUtil
 let greater_than = wrap_function2 id id Value.from_bool (fun a b -> not (ValueUtils.value_eq a b || ValueUtils.value_lt a b))
 let greater_or_equal = wrap_function2 id id Value.from_bool (fun a b -> not @@ ValueUtils.value_lt a b)
 
+let ignore_func = Value.Function (fun _ -> Value.nil)
+
 let initial_context = [
   ("raise", raise_func) ;
   ("raise_notrace", raise_func) ;
@@ -133,7 +135,15 @@ let initial_context = [
   ("^", string_binary_operator ( ^ )) ;
 
   ("int_of_char", wrap_function Value.to_char Value.from_int int_of_char) ;
-  ("char_of_int", wrap_function Value.to_int Value.from_char char_of_int)
+  ("char_of_int", wrap_function Value.to_int Value.from_char char_of_int) ;
+  ("ignore", ignore_func) ;
+
+  ("string_of_bool", wrap_function Value.to_bool Value.from_string string_of_bool) ;
+  ("bool_of_string", wrap_function Value.to_string Value.from_bool bool_of_string) ;
+  ("string_of_int", wrap_function Value.to_int Value.from_string string_of_int) ;
+  ("int_of_string", wrap_function Value.to_string Value.from_int int_of_string) ;
+  ("string_of_float", wrap_function Value.to_float Value.from_string string_of_float) ;
+  ("float_of_string", wrap_function Value.to_string Value.from_float float_of_string) ;
 ]
 
 let populate state =
