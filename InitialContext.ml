@@ -28,6 +28,14 @@ let int_binary_operator = wrap_function2 Value.to_int Value.to_int Value.from_in
 let float_binary_operator = wrap_function2 Value.to_float Value.to_float Value.from_float
 let string_binary_operator = wrap_function2 Value.to_string Value.to_string Value.from_string
 
+let value_not v =
+  if ValueUtils.value_eq v Value.true_val then
+    Value.false_val
+  else if ValueUtils.value_eq v Value.false_val then
+    Value.true_val
+  else
+    raise Value.TypeError
+
 let bool_binary_operator op =
   let bool_of_string = function
   | "true" -> true
@@ -65,6 +73,7 @@ let initial_context = [
   ("invalid_arg", invalid_arg_func) ;
   ("failwith", failwith_func) ;
 
+  ("not", Value.from_function value_not) ;
   ("=", equal) ;
   ("<>", not_equal) ;
   ("<", lesser_than) ;
@@ -121,7 +130,10 @@ let initial_context = [
   ("&&", bool_binary_operator ( && )) ;
   ("||", bool_binary_operator ( || )) ;
 
-  ("^", string_binary_operator ( ^ ))
+  ("^", string_binary_operator ( ^ )) ;
+
+  ("int_of_char", wrap_function Value.to_char Value.from_int int_of_char) ;
+  ("char_of_int", wrap_function Value.to_int Value.from_char char_of_int)
 ]
 
 let populate state =
