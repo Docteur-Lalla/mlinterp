@@ -16,10 +16,16 @@ type t =
 | Record of (string, int) BatMap.t
 | Module of (string, int) BatMap.t
 | Functor of (t -> t)
+| In_channel of BatIO.input
+| Out_channel of unit BatIO.output
 
 let nil = Sumtype ("()", None)
 let true_val = Sumtype ("true", None)
 let false_val = Sumtype ("false", None)
+
+let stdin_chan = In_channel stdin
+let stdout_chan = Out_channel stdout
+let stderr_chan = Out_channel stderr
 
 let to_int = function Int i -> i | _ -> raise TypeError
 let to_float = function Float f -> f | _ -> raise TypeError
@@ -33,6 +39,8 @@ let to_sumtype = function Sumtype (s,v) -> (s, v) | _ -> raise TypeError
 let to_record = function Record r -> r | _ -> raise TypeError
 let to_module = function Module m -> m | _ -> raise TypeError
 let to_functor = function Functor f -> f | _ -> raise TypeError
+let to_input = function In_channel c -> c | _ -> raise TypeError
+let to_output = function Out_channel c -> c | _ -> raise TypeError
 
 let to_bool = function
 | Sumtype ("true", None) -> true
@@ -51,6 +59,8 @@ let from_sumtype (s, v) = Sumtype (s, v)
 let from_record r = Record r
 let from_module m = Module m
 let from_functor f = Functor f
+let from_input i = In_channel i
+let from_output o = Out_channel o
 
 let from_bool = function
 | true -> true_val

@@ -69,6 +69,9 @@ let greater_or_equal = wrap_function2 id id Value.from_bool (fun a b -> not @@ V
 
 let ignore_func = Value.Function (fun _ -> Value.nil)
 
+let input_channel c = BatIO.input_channel ~autoclose: true ~cleanup: true c
+let output_channel c = BatIO.output_channel ~cleanup: true c
+
 let initial_context = [
   ("raise", raise_func) ;
   ("raise_notrace", raise_func) ;
@@ -144,6 +147,13 @@ let initial_context = [
   ("int_of_string", wrap_function Value.to_string Value.from_int int_of_string) ;
   ("string_of_float", wrap_function Value.to_float Value.from_string string_of_float) ;
   ("float_of_string", wrap_function Value.to_string Value.from_float float_of_string) ;
+
+  ("stdin", Value.stdin_chan) ;
+  ("stdout", Value.stdout_chan) ;
+  ("stderr", Value.stderr_chan) ;
+
+  ("open_out", wrap_function Value.to_string Value.from_output (output_channel % Pervasives.open_out)) ;
+  ("open_in", wrap_function Value.to_string Value.from_input (input_channel % Pervasives.open_in)) ;
 ]
 
 let populate state =

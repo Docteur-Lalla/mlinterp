@@ -34,6 +34,8 @@ let rec string_of_value state = function
   "{" ^ BatString.join " ; " fields_s ^ "}"
 | Module m -> string_of_value state (Record m)
 | Functor _ -> "<functor>"
+| In_channel _ -> "<in_channel>"
+| Out_channel _ -> "<out_channel>"
 
 (** Get the string representation of the given value's type. *)
 let rec type_of_value = function
@@ -50,6 +52,8 @@ let rec type_of_value = function
 | Record _ -> "record"
 | Module _ -> "module"
 | Functor _ -> "functor"
+| In_channel _ -> "in_channel"
+| Out_channel _ -> "out_channel"
 
 (** Print the value in stdout. *)
 let print_value state v =
@@ -74,10 +78,14 @@ let rec value_eq a b = match (a, b) with
 | (Record r1, Record r2) -> BatMap.equal (=) r1 r2
 | (Module m1, Module m2) -> BatMap.equal (=) m1 m2
 | (Functor _, Functor _) -> false
+| (In_channel c1, In_channel c2) -> c1 = c2
+| (Out_channel c1, Out_channel c2) -> c1 = c2
 | _ -> raise TypeError
 
 let value_lt a b = match (a, b) with
 | (Int i1, Int i2) -> i1 < i2
 | (Float f1, Float f2) -> f1 < f2
 | (Char c1, Char c2) -> c1 < c2
+| (In_channel c1, In_channel c2) -> c1 < c2
+| (Out_channel c1, Out_channel c2) -> c1 < c2
 | _ -> raise TypeError
