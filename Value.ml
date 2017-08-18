@@ -47,6 +47,10 @@ let to_bool = function
 | Sumtype ("false", None) -> false
 | _ -> raise TypeError
 
+let to_nil = function
+| Sumtype ("()", None) -> ()
+| _ -> raise TypeError
+
 let from_int i = Int i
 let from_float f = Float f
 let from_char c = Char c
@@ -65,3 +69,5 @@ let from_output o = Out_channel o
 let from_bool = function
 | true -> true_val
 | false -> false_val
+
+let from_nil () = nil

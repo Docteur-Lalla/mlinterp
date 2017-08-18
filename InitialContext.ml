@@ -153,7 +153,13 @@ let initial_context = [
   ("stderr", Value.stderr_chan) ;
 
   ("open_out", wrap_function Value.to_string Value.from_output (output_channel % Pervasives.open_out)) ;
+  ("open_out_bin", wrap_function Value.to_string Value.from_output (output_channel % Pervasives.open_out_bin)) ;
+  ("flush", wrap_function Value.to_output Value.from_nil BatIO.flush) ;
+  ("output_char", wrap_function2 Value.to_output Value.to_char Value.from_nil BatIO.write) ;
+  ("output_string", wrap_function2 Value.to_output Value.to_string Value.from_nil BatIO.nwrite) ;
+
   ("open_in", wrap_function Value.to_string Value.from_input (input_channel % Pervasives.open_in)) ;
+  ("open_in_bin", wrap_function Value.to_string Value.from_input (input_channel % Pervasives.open_in_bin)) ;
 ]
 
 let populate state =
