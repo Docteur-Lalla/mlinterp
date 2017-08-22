@@ -83,6 +83,14 @@ let max =
   | _ -> raise Value.TypeError in
   wrap_function2 id id id aux
 
+let compare =
+  let aux a b = match (a, b) with
+  | (Value.Int i1, Value.Int i2) -> Value.Int (Pervasives.compare i1 i2)
+  | (Value.Float f1, Value.Float f2) -> Value.Int (Pervasives.compare f1 f2)
+  | (Value.Char c1, Value.Char c2) -> Value.Int (Pervasives.compare c1 c2)
+  | _ -> raise Value.TypeError in
+  wrap_function2 id id id aux
+
 let ignore_func = Value.Function (fun _ -> Value.nil)
 
 let input_channel c = BatIO.input_channel ~autoclose: true ~cleanup: true c
@@ -101,8 +109,12 @@ let initial_context = [
   ("<=", lesser_or_equal) ;
   (">", greater_than) ;
   (">=", greater_or_equal) ;
+  ("compare", compare) ;
   ("min", min) ;
   ("max", max) ;
+  
+  ("|>", wrap_function2 id Value.to_function id ( |> )) ;
+  ("@@", wrap_function2 Value.to_function id id ( @@ )) ;
 
   ("+", int_binary_operator ( + )) ;
   ("-", int_binary_operator ( - )) ;
