@@ -67,6 +67,22 @@ let lesser_or_equal = wrap_function2 id id Value.from_bool (fun a b -> ValueUtil
 let greater_than = wrap_function2 id id Value.from_bool (fun a b -> not (ValueUtils.value_eq a b || ValueUtils.value_lt a b))
 let greater_or_equal = wrap_function2 id id Value.from_bool (fun a b -> not @@ ValueUtils.value_lt a b)
 
+let min =
+  let aux a b = match (a, b) with
+  | (Value.Int i1, Value.Int i2) -> Value.Int (Pervasives.min i1 i2)
+  | (Value.Float f1, Value.Float f2) -> Value.Float (Pervasives.min f1 f2)
+  | (Value.Char c1, Value.Char c2) -> Value.Char (Pervasives.min c1 c2)
+  | _ -> raise Value.TypeError in
+  wrap_function2 id id id aux
+
+let max =
+  let aux a b = match (a, b) with
+  | (Value.Int i1, Value.Int i2) -> Value.Int (Pervasives.max i1 i2)
+  | (Value.Float f1, Value.Float f2) -> Value.Float (Pervasives.max f1 f2)
+  | (Value.Char c1, Value.Char c2) -> Value.Char (Pervasives.max c1 c2)
+  | _ -> raise Value.TypeError in
+  wrap_function2 id id id aux
+
 let ignore_func = Value.Function (fun _ -> Value.nil)
 
 let input_channel c = BatIO.input_channel ~autoclose: true ~cleanup: true c
@@ -85,6 +101,8 @@ let initial_context = [
   ("<=", lesser_or_equal) ;
   (">", greater_than) ;
   (">=", greater_or_equal) ;
+  ("min", min) ;
+  ("max", max) ;
 
   ("+", int_binary_operator ( + )) ;
   ("-", int_binary_operator ( - )) ;
@@ -160,6 +178,7 @@ let initial_context = [
 
   ("open_in", wrap_function Value.to_string Value.from_input (input_channel % Pervasives.open_in)) ;
   ("open_in_bin", wrap_function Value.to_string Value.from_input (input_channel % Pervasives.open_in_bin)) ;
+  ("input_char", wrap_function Value.to_input Value.from_char BatIO.read) ;
 ]
 
 let populate state =
