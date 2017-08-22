@@ -166,6 +166,16 @@ let initial_context = [
   ("floor", float_float_function ( floor )) ;
   ("abs_float", float_float_function ( abs_float )) ;
   ("hypot", float_binary_operator ( hypot )) ;
+  ("copysign", float_binary_operator ( hypot )) ;
+  ("mod_float", float_binary_operator ( mod_float )) ;
+  ("ldexp", wrap_function2 Value.to_float Value.to_int Value.from_float ( ldexp )) ;
+  ("truncate", wrap_function Value.to_float Value.from_int ( truncate )) ;
+  ("infinity", Value.Float infinity) ;
+  ("neg_infinity", Value.Float neg_infinity) ;
+  ("nan", Value.Float nan) ;
+  ("max_float", Value.Float max_float) ;
+  ("min_float", Value.Float min_float) ;
+  ("epsilon_float", Value.Float epsilon_float) ;
 
   ("&&", bool_binary_operator ( && )) ;
   ("||", bool_binary_operator ( || )) ;
