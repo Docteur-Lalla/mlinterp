@@ -125,6 +125,8 @@ let initial_context = [
   ("abs", int_int_function abs) ;
   ("succ", int_int_function succ) ;
   ("pred", int_int_function pred) ;
+  ("min_int", Value.Int Pervasives.min_int) ;
+  ("max_int", Value.Int Pervasives.max_int) ;
   ("~-", int_int_function (~-)) ;
   ("~+", int_int_function (~-)) ;
 
@@ -141,6 +143,8 @@ let initial_context = [
   ("*.", float_binary_operator ( *. )) ;
   ("/.", float_binary_operator ( /. )) ;
   ("**", float_binary_operator ( ** )) ;
+  ("~-.", float_float_function (~-.)) ;
+  ("~+.", float_float_function (~-.)) ;
 
   ("sqrt", float_float_function ( sqrt )) ;
   ("exp", float_float_function ( exp )) ;
@@ -161,6 +165,7 @@ let initial_context = [
   ("ceil", float_float_function ( ceil )) ;
   ("floor", float_float_function ( floor )) ;
   ("abs_float", float_float_function ( abs_float )) ;
+  ("hypot", float_binary_operator ( hypot )) ;
 
   ("&&", bool_binary_operator ( && )) ;
   ("||", bool_binary_operator ( || )) ;
