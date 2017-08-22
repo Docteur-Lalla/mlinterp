@@ -193,6 +193,9 @@ let initial_context = [
   ("string_of_float", wrap_function Value.to_float Value.from_string string_of_float) ;
   ("float_of_string", wrap_function Value.to_string Value.from_float float_of_string) ;
 
+  ("fst", wrap_function Value.to_tuple id List.hd) ;
+  ("snd", wrap_function Value.to_tuple id (List.hd % List.tl) ) ;
+
   ("stdin", Value.stdin_chan) ;
   ("stdout", Value.stdout_chan) ;
   ("stderr", Value.stderr_chan) ;
