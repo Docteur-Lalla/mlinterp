@@ -96,6 +96,26 @@ let ignore_func = Value.Function (fun _ -> Value.nil)
 let input_channel c = BatIO.input_channel ~autoclose: true ~cleanup: true c
 let output_channel c = BatIO.output_channel ~cleanup: true c
 
+let rec concat va vb =
+  let empty = Value.Sumtype ("[]", None) in
+  let cons t = Value.Sumtype ("::", Some (Value.Tuple t)) in
+  match (va, vb) with
+  | l1, t when l1 = empty -> t
+  | t, l1 when l1 = empty -> t
+  | Value.Sumtype ("::", Some (Value.Tuple (hd :: [tl]))),
+    (Value.Sumtype ("::", Some (Value.Tuple _)) as l2) when tl = empty ->
+      cons (hd :: [l2])
+  | Value.Sumtype ("::", Some (Value.Tuple (hd :: [tl]))),
+    Value.Sumtype ("::", Some (Value.Tuple _)) ->
+      begin
+        match concat tl vb with
+        | Value.Sumtype ("::", Some (Value.Tuple _)) as l2 ->
+          cons (hd :: [l2])
+        | _ -> raise Value.TypeError
+      end
+  | _ -> raise Value.TypeError
+
+
 let initial_context = [
   ("raise", raise_func) ;
   ("raise_notrace", raise_func) ;
@@ -195,6 +215,8 @@ let initial_context = [
 
   ("fst", wrap_function Value.to_tuple id List.hd) ;
   ("snd", wrap_function Value.to_tuple id (List.hd % List.tl) ) ;
+
+  ("@", wrap_function2 id id id concat) ;
 
   ("stdin", Value.stdin_chan) ;
   ("stdout", Value.stdout_chan) ;
