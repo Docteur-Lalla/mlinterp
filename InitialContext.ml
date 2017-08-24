@@ -230,6 +230,9 @@ let initial_context = [
   ("seek_out", wrap_function2 Value.to_output Value.to_int Value.from_nil Pervasives.seek_out) ;
   ("pos_out", wrap_function Value.to_output Value.from_int Pervasives.pos_out) ;
   ("out_channel_length", wrap_function Value.to_output Value.from_int Pervasives.out_channel_length) ;
+  ("close_out", wrap_function Value.to_output Value.from_nil Pervasives.close_out) ;
+  ("close_out_noerr", wrap_function Value.to_output Value.from_nil Pervasives.close_out_noerr) ;
+  ("set_binary_node_out", wrap_function2 Value.to_output Value.to_bool Value.from_nil Pervasives.set_binary_mode_out) ;
 
   ("open_in", wrap_function Value.to_string Value.from_input Pervasives.open_in) ;
   ("open_in_bin", wrap_function Value.to_string Value.from_input Pervasives.open_in_bin) ;
@@ -238,6 +241,8 @@ let initial_context = [
   ("seek_in", wrap_function2 Value.to_input Value.to_int Value.from_nil Pervasives.seek_in) ;
   ("pos_in", wrap_function Value.to_input Value.from_int Pervasives.pos_in) ;
   ("in_channel_length", wrap_function Value.to_input Value.from_int Pervasives.in_channel_length) ;
+  ("close_in_noerr", wrap_function Value.to_input Value.from_nil Pervasives.close_in_noerr) ;
+  ("set_binary_node_in", wrap_function2 Value.to_input Value.to_bool Value.from_nil Pervasives.set_binary_mode_in) ;
 ]
 
 let populate state =
