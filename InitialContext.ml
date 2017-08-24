@@ -96,20 +96,27 @@ let ignore_func = Value.Function (fun _ -> Value.nil)
 let rec concat va vb =
   let empty = Value.Sumtype ("[]", None) in
   let cons t = Value.Sumtype ("::", Some (Value.Tuple t)) in
-  match (va, vb) with
-  | l1, t when l1 = empty -> t
-  | t, l1 when l1 = empty -> t
-  | Value.Sumtype ("::", Some (Value.Tuple (hd :: [tl]))),
-    (Value.Sumtype ("::", Some (Value.Tuple _)) as l2) when tl = empty ->
-      cons (hd :: [l2])
-  | Value.Sumtype ("::", Some (Value.Tuple (hd :: [tl]))),
-    Value.Sumtype ("::", Some (Value.Tuple _)) ->
+  let aux l1 l2 =
+    match l1 with
+    | x :: [xs] when xs = empty -> cons (x :: [vb])
+    | x :: [xs] ->
       begin
-        match concat tl vb with
+        match concat xs vb with
         | Value.Sumtype ("::", Some (Value.Tuple _)) as l2 ->
-          cons (hd :: [l2])
+          cons (x :: [l2])
         | _ -> raise Value.TypeError
-      end
+        end
+    | _ -> raise Value.TypeError in
+      
+  match va with
+  | t when t = empty -> vb
+  | Value.Sumtype ("::", Some (Value.Tuple l1)) ->
+    begin
+      match vb with
+      | t when t = empty -> va
+      | Value.Sumtype ("::", Some (Value.Tuple l2)) -> aux l1 l2
+      | _ -> raise Value.TypeError
+    end
   | _ -> raise Value.TypeError
 
 
