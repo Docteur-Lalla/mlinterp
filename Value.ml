@@ -16,16 +16,16 @@ type t =
 | Record of (string, int) BatMap.t
 | Module of (string, int) BatMap.t
 | Functor of (t -> t)
-| In_channel of BatIO.input
-| Out_channel of unit BatIO.output
+| In_channel of in_channel
+| Out_channel of out_channel
 
 let nil = Sumtype ("()", None)
 let true_val = Sumtype ("true", None)
 let false_val = Sumtype ("false", None)
 
-let stdin_chan = In_channel stdin
-let stdout_chan = Out_channel stdout
-let stderr_chan = Out_channel stderr
+let stdin_chan = In_channel Pervasives.stdin
+let stdout_chan = Out_channel Pervasives.stdout
+let stderr_chan = Out_channel Pervasives.stderr
 
 let to_int = function Int i -> i | _ -> raise TypeError
 let to_float = function Float f -> f | _ -> raise TypeError

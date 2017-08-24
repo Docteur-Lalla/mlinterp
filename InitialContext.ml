@@ -93,9 +93,6 @@ let compare =
 
 let ignore_func = Value.Function (fun _ -> Value.nil)
 
-let input_channel c = BatIO.input_channel ~autoclose: true ~cleanup: true c
-let output_channel c = BatIO.output_channel ~cleanup: true c
-
 let rec concat va vb =
   let empty = Value.Sumtype ("[]", None) in
   let cons t = Value.Sumtype ("::", Some (Value.Tuple t)) in
@@ -222,15 +219,20 @@ let initial_context = [
   ("stdout", Value.stdout_chan) ;
   ("stderr", Value.stderr_chan) ;
 
-  ("open_out", wrap_function Value.to_string Value.from_output (output_channel % Pervasives.open_out)) ;
-  ("open_out_bin", wrap_function Value.to_string Value.from_output (output_channel % Pervasives.open_out_bin)) ;
-  ("flush", wrap_function Value.to_output Value.from_nil BatIO.flush) ;
-  ("output_char", wrap_function2 Value.to_output Value.to_char Value.from_nil BatIO.write) ;
-  ("output_string", wrap_function2 Value.to_output Value.to_string Value.from_nil BatIO.nwrite) ;
+  ("open_out", wrap_function Value.to_string Value.from_output Pervasives.open_out) ;
+  ("open_out_bin", wrap_function Value.to_string Value.from_output Pervasives.open_out_bin) ;
+  ("flush", wrap_function Value.to_output Value.from_nil Pervasives.flush) ;
+  ("flush_all", wrap_function Value.to_nil Value.from_nil Pervasives.flush_all) ;
 
-  ("open_in", wrap_function Value.to_string Value.from_input (input_channel % Pervasives.open_in)) ;
-  ("open_in_bin", wrap_function Value.to_string Value.from_input (input_channel % Pervasives.open_in_bin)) ;
-  ("input_char", wrap_function Value.to_input Value.from_char BatIO.read) ;
+  ("output_char", wrap_function2 Value.to_output Value.to_char Value.from_nil Pervasives.output_char) ;
+  ("output_string", wrap_function2 Value.to_output Value.to_string Value.from_nil Pervasives.output_string) ;
+
+  ("seek_out", wrap_function2 Value.to_output Value.to_int Value.from_nil Pervasives.seek_out) ;
+  ("pos_out", wrap_function Value.to_output Value.from_int Pervasives.pos_out) ;
+
+  ("open_in", wrap_function Value.to_string Value.from_input Pervasives.open_in) ;
+  ("open_in_bin", wrap_function Value.to_string Value.from_input Pervasives.open_in_bin) ;
+  ("input_char", wrap_function Value.to_input Value.from_char Pervasives.input_char) ;
 ]
 
 let populate state =
