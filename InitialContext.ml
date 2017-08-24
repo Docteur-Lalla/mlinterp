@@ -186,7 +186,9 @@ let initial_context = [
   ("copysign", float_binary_operator ( hypot )) ;
   ("mod_float", float_binary_operator ( mod_float )) ;
   ("ldexp", wrap_function2 Value.to_float Value.to_int Value.from_float ( ldexp )) ;
+  ("float_of_int", wrap_function Value.to_int Value.from_float ( float_of_int )) ;
   ("truncate", wrap_function Value.to_float Value.from_int ( truncate )) ;
+  ("int_of_float", wrap_function Value.to_float Value.from_int ( int_of_float )) ;
   ("infinity", Value.Float infinity) ;
   ("neg_infinity", Value.Float neg_infinity) ;
   ("nan", Value.Float nan) ;
