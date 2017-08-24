@@ -229,10 +229,15 @@ let initial_context = [
 
   ("seek_out", wrap_function2 Value.to_output Value.to_int Value.from_nil Pervasives.seek_out) ;
   ("pos_out", wrap_function Value.to_output Value.from_int Pervasives.pos_out) ;
+  ("out_channel_length", wrap_function Value.to_output Value.from_int Pervasives.out_channel_length) ;
 
   ("open_in", wrap_function Value.to_string Value.from_input Pervasives.open_in) ;
   ("open_in_bin", wrap_function Value.to_string Value.from_input Pervasives.open_in_bin) ;
   ("input_char", wrap_function Value.to_input Value.from_char Pervasives.input_char) ;
+
+  ("seek_in", wrap_function2 Value.to_input Value.to_int Value.from_nil Pervasives.seek_in) ;
+  ("pos_in", wrap_function Value.to_input Value.from_int Pervasives.pos_in) ;
+  ("in_channel_length", wrap_function Value.to_input Value.from_int Pervasives.in_channel_length) ;
 ]
 
 let populate state =
